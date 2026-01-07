@@ -17,6 +17,10 @@ git commit -m "Added README file"
 # Pushing to Github
 git remote add origin https://github.com/nummbee01/nids-anomaly-analyzer.git
 git push -u origin main
+# Adding a virtual environment
+python3 -m venv venv
+source venv/bin/activate.fish # because I am using fish shell
+pip install -r requirements.txt
 ```
 
 # Day 1
