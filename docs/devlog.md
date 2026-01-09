@@ -33,3 +33,39 @@ I'll use Streamlit + Scapy for this. In Streamlit, there is a menu bar with butt
 
 - Streamlit
 - Scapy
+
+# Day 2
+
+Applied git branching using the following commands:
+
+```bash
+git switch -c testing
+git push -u origin testing
+
+git branch # too see current branch
+```
+
+Learned the basics of Scapy, including how to make packets, send packets, sniff packets, and filter packets, and analyze them.
+
+## Logic behind the NIDS
+
+1. Sniffs packets
+2. Analyzes packets
+3. Detects anomalies
+4. Blocks malicious traffic
+5. Logs alerts
+
+## Cases that triggers alerts
+
+- Same IP tries multiple ports in short time
+- Massive SYN packets being sent
+- IP spoofing
+- ARP spoofing (impersonates another device on local network)
+- DDoS attacks
+- Malicious packets
+- Brute force attacks
+- ICMP flood
+- DNS Tunneling
+- Unusual protocol usage
+- Abnormal traffic patterns
+- MAC spoofing
