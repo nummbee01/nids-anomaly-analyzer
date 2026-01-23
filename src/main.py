@@ -40,4 +40,5 @@ def save_alert_log(alert):
 
 # Analyze packets
 def analyze_threats(packet_info):
+
     return
