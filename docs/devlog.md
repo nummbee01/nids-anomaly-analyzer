@@ -69,3 +69,7 @@ Learned the basics of Scapy, including how to make packets, send packets, sniff 
 - Unusual protocol usage
 - Abnormal traffic patterns
 - MAC spoofing
+
+# Day 3
+
+Decided to switch to PyQt for more modern looks and compatibility. 
