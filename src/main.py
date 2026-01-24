@@ -26,7 +26,22 @@ def sniffing_interface(interface):
     sniff(iface=interface, prn=print_packet_info, count=5, store=False)
 
 
-# Parsing Data
+# Converting raw data
+
+
+def convert_bytes_to_mac(bytes):
+    return ":".join(f"{byte:02x}" for byte in bytes)
+
+
+def convert_bytes_to_ipv4(bytes):
+    return ".".join(f"{byte}" for byte in bytes)
+
+
+def convert_bytes_to_ipv6(bytes):
+    return ":".join(f"{byte:02x}" for byte in bytes)
+
+
+# Parse Ethernet
 
 
 def parse_ethernet(raw_data):
@@ -50,8 +65,61 @@ def parse_ethernet(raw_data):
     return {"dst_mac": dst_mac, "src_mac": src_mac, "ethertype": ethertype}
 
 
-def convert_bytes_to_mac(bytes):
-    return ":".join(f"{byte:02x}" for byte in bytes)
+# Parse IPv4
+
+
+def parse_ipv4(raw_data):
+    """
+    Parse IPv4 header from raw bytes
+
+    IPv4 Header (20 bytes minimum):
+    Byte 0: Version (4 bits) + Header Length (4 bits)
+    Byte 1: Type of Service
+    Bytes 2-3: Total Length
+    Bytes 4-5: Identification
+    Bytes 6-7: Flags + Fragment Offset
+    Byte 8: Time to Live (TTL)
+    Byte 9: Protocol (6=TCP, 17=UDP, 1=ICMP)
+    Bytes 10-11: Header Checksum
+    Bytes 12-15: Source IP (4 bytes)
+    Bytes 16-19: Destination IP (4 bytes)
+
+    Returns: dict with version, ihl, protocol, src_ip, dst_ip, ttl, total_length
+    """
+
+    src_ip = convert_bytes_to_ipv4(raw_data[12:16])
+    dst_ip = convert_bytes_to_ipv4(raw_data[16:20])
+    protocol = int(raw_data[9])
+    return {
+        "protocol": protocol,
+        "src_ip": src_ip,
+        "dst_ip": dst_ip,
+    }
+
+
+def parse_ipv6(raw_data):
+    """
+    Parse IPv6 header from raw bytes
+
+    IPv6 Header (40 bytes fixed):
+    Bytes 0-3: Version (4 bits) + Traffic Class (8 bits) + Flow Label (20 bits)
+    Bytes 4-5: Payload Length (16 bits)
+    Byte 6: Next Header (8 bits) -> same as IPv4 protocol
+    Byte 7: Hop Limit (8 bits) -> same as TTL
+    Bytes 8-23: Source Address (128 bits, 16 bytes)
+    Bytes 24-39: Destination Address (128 bits, 16 bytes)
+
+    Returns: dict with version, payload_length, next_header, hop_limit, src_ip, dst_ip
+    """
+    src_ip = convert_bytes_to_ipv6(raw_data[8:24])
+    dst_ip = convert_bytes_to_ipv6(raw_data[24:40])
+    return {
+        "src_ip": src_ip,
+        "dst_ip": dst_ip,
+    }
+
+
+# Print Packet Information
 
 
 def print_packet_info(pkt):
@@ -65,12 +133,17 @@ def print_packet_info(pkt):
 
     # Decode EtherType
     eth_type = int(eth_info["ethertype"], 16)
+
     if eth_type == 0x0800:
         print("🔍 Protocol: IPv4")
-    elif eth_type == 0x0806:
-        print("🔍 Protocol: ARP")
+        ip_info = parse_ipv4(raw_bytes[14:34])
+        print(f"IPv4: {ip_info['src_ip']} -> {ip_info['dst_ip']}")
     elif eth_type == 0x86DD:
         print("🔍 Protocol: IPv6")
+        ip_info = parse_ipv6(raw_bytes[14:54])
+        print(f"IPv6: {ip_info['src_ip']} -> {ip_info['dst_ip']}")
+    elif eth_type == 0x0806:
+        print("🔍 Protocol: ARP")
     else:
         print(f"🔍 Protocol: Unknown (0x{eth_type:04x})")
 
