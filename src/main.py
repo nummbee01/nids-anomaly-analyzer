@@ -84,7 +84,7 @@ def parse_ipv4(raw_data):
     Bytes 12-15: Source IP (4 bytes)
     Bytes 16-19: Destination IP (4 bytes)
 
-    Returns: dict with version, ihl, protocol, src_ip, dst_ip, ttl, total_length
+    Returns: protocol, src_ip, dst_ip
     """
 
     src_ip = convert_bytes_to_ipv4(raw_data[12:16])
@@ -109,7 +109,7 @@ def parse_ipv6(raw_data):
     Bytes 8-23: Source Address (128 bits, 16 bytes)
     Bytes 24-39: Destination Address (128 bits, 16 bytes)
 
-    Returns: dict with version, payload_length, next_header, hop_limit, src_ip, dst_ip
+    Returns: src_ip, dst_ip
     """
     src_ip = convert_bytes_to_ipv6(raw_data[8:24])
     dst_ip = convert_bytes_to_ipv6(raw_data[24:40])
@@ -119,33 +119,118 @@ def parse_ipv6(raw_data):
     }
 
 
-# Print Packet Information
+def parse_tcp(raw_data):
+    """
+    Parse TCP header from raw bytes
+
+    TCP Header (minimum 20 bytes):
+    Bytes 0-1: Source Port (16 bits)
+    Bytes 2-3: Destination Port (16 bits)
+    Bytes 4-7: Sequence Number (32 bits)
+    Bytes 8-11: Acknowledgment Number (32 bits)
+    Byte 12: Data Offset (4 bits) + Reserved (4 bits)
+    Byte 13: Flags (8 bits)
+    Bytes 14-15: Window Size (16 bits)
+    Bytes 16-17: Checksum (16 bits)
+    Bytes 18-19: Urgent Pointer (16 bits)
+
+    Returns: dict with src_port, dst_port, seq_num, ack_num
+    """
+
+    src_port = int.from_bytes(raw_data[0:2], byteorder="big")
+    dst_port = int.from_bytes(raw_data[2:4], byteorder="big")
+    seq_num = int.from_bytes(raw_data[4:8], byteorder="big")
+    ack_num = int.from_bytes(raw_data[8:12], byteorder="big")
+
+    return {
+        "src_port": src_port,
+        "dst_port": dst_port,
+        "seq_num": seq_num,
+        "ack_num": ack_num,
+    }
 
 
-def print_packet_info(pkt):
-    raw_bytes = bytes(pkt)
-    eth_info = parse_ethernet(raw_bytes[:14])
+def parse_udp(raw_data):
+    """
+    Parse UDP header from raw bytes
 
-    print("=" * 40)
-    print(f"Source MAC: {eth_info['src_mac']}")
-    print(f"Destination MAC: {eth_info['dst_mac']}")
-    print(f"EtherType: 0x{eth_info['ethertype']}")
+    UDP Header (8 bytes):
+    Bytes 0-1: Source Port (16 bits)
+    Bytes 2-3: Destination Port (16 bits)
+    Bytes 4-5: Length (16 bits)
+    Bytes 6-7: Checksum (16 bits)
 
-    # Decode EtherType
-    eth_type = int(eth_info["ethertype"], 16)
+    Returns: dict with src_port, dst_port, length, checksum
+    """
 
-    if eth_type == 0x0800:
-        print("🔍 Protocol: IPv4")
-        ip_info = parse_ipv4(raw_bytes[14:34])
-        print(f"IPv4: {ip_info['src_ip']} -> {ip_info['dst_ip']}")
-    elif eth_type == 0x86DD:
-        print("🔍 Protocol: IPv6")
-        ip_info = parse_ipv6(raw_bytes[14:54])
-        print(f"IPv6: {ip_info['src_ip']} -> {ip_info['dst_ip']}")
-    elif eth_type == 0x0806:
-        print("🔍 Protocol: ARP")
-    else:
-        print(f"🔍 Protocol: Unknown (0x{eth_type:04x})")
+    src_port = int.from_bytes(raw_data[0:2], byteorder="big")
+    dst_port = int.from_bytes(raw_data[2:4], byteorder="big")
+    length = int.from_bytes(raw_data[4:6], byteorder="big")
+    checksum = int.from_bytes(raw_data[6:8], byteorder="big")
+
+    return {
+        "src_port": src_port,
+        "dst_port": dst_port,
+        "length": length,
+        "checksum": checksum,
+    }
+
+
+def parse_icmpv4(raw_data):
+    """
+    Parse ICMP message from raw bytes
+
+    ICMP Header (8 bytes minimum):
+    Byte 0: Type (8 bits)
+    Byte 1: Code (8 bits)
+    Bytes 2-3: Checksum (16 bits)
+    Bytes 4-5: Identifier (16 bits) - for Echo Request/Reply
+    Bytes 6-7: Sequence Number (16 bits) - for Echo Request/Reply
+
+    Returns: dict with type, code, checksum, identifier, sequence
+    """
+
+    type = raw_data[0]
+    code = raw_data[1]
+    checksum = int.from_bytes(raw_data[2:4], byteorder="big")
+    identifier = int.from_bytes(raw_data[4:6], byteorder="big")
+    sequence = int.from_bytes(raw_data[6:8], byteorder="big")
+
+    return {
+        "type": type,
+        "code": code,
+        "checksum": checksum,
+        "identifier": identifier,
+        "sequence": sequence,
+    }
+
+
+def parse_icmpv6(raw_data):
+    """
+    Parse ICMPv6 message from raw bytes
+
+    ICMPv6 Header (8 bytes minimum):
+    Byte 0: Type (8 bits)
+    Byte 1: Code (8 bits)
+    Bytes 2-3: Checksum (16 bits)
+    Bytes 4-7: Reserved (32 bits)
+
+    Returns: dict with type, code, checksum
+    """
+
+    type = raw_data[0]
+    code = raw_data[1]
+    checksum = int.from_bytes(raw_data[2:4], byteorder="big")
+
+    return {
+        "type": type,
+        "code": code,
+        "checksum": checksum,
+    }
+
+
+def print_packet_info(packet):
+    return
 
 
 def main():

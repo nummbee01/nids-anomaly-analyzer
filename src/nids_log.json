@@ -1,0 +1,9 @@
+{"timestamp": "2026-01-24T11:20:40.126254", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
+{"timestamp": "2026-01-24T11:20:41.126981", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
+{"timestamp": "2026-01-24T11:20:42.127600", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
+{"timestamp": "2026-01-24T11:20:43.128386", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
+{"timestamp": "2026-01-24T11:21:46.079342", "type": "Possible DNS Tunneling", "severity": "MEDIUM", "details": "Source: 192.168.1.93, DNS queries: 51"}
+{"timestamp": "2026-01-24T11:22:40.127503", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
+{"timestamp": "2026-01-24T11:22:41.128294", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
+{"timestamp": "2026-01-24T11:22:42.129721", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
+{"timestamp": "2026-01-24T11:22:43.130752", "type": "Suspicious TTL", "severity": "LOW", "details": "Source: 192.168.1.93, TTL: 1"}
