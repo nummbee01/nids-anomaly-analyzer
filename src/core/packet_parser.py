@@ -229,7 +229,7 @@ def compare_with_scapy(packet, manual):
         if packet.haslayer(Ether):
             eth = packet[Ether]
             if manual.get("src_mac") != eth.src or manual.get("dst_mac") != eth.dst:
-                urn False
+                return False
 
         # IPv4
         if packet.haslayer(IP):
