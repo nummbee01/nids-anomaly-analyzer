@@ -1,5 +1,6 @@
 from scapy.all import *
-from packet_parser import print_packet_info
+
+from .packet_parser import *
 
 
 def select_interface():

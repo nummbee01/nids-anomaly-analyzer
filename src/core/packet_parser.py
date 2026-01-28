@@ -1,288 +1,144 @@
+from dataclasses import asdict
+
 from scapy.all import *
 
-# Converting raw data
+from src.utils.data_structures import *
+
+# Converting bytes to data structures
 
 
-def convert_bytes_to_mac(bytes):
-    return ":".join(f"{byte:02x}" for byte in bytes)
+def bytes_to_mac(b: bytes) -> str:
+    return ":".join(f"{byte:02x}" for byte in b)
 
 
-def convert_bytes_to_ipv4(bytes):
-    return ".".join(f"{byte}" for byte in bytes)
+def bytes_to_ipv4(b: bytes) -> str:
+    return ".".join(str(byte) for byte in b)
 
 
-def convert_bytes_to_ipv6(bytes):
-    return ":".join(
-        f"{bytes[i]:02x}{bytes[i + 1]:02x}" for i in range(0, len(bytes), 2)
+def bytes_to_ipv6(b: bytes) -> str:
+    return ":".join(f"{b[i]:02x}{b[i + 1]:02x}" for i in range(0, 16, 2))
+
+
+# Parsers
+
+
+def parse_ethernet(raw: bytes) -> Ethernet:
+    if len(raw) < 14:
+        raise ValueError("Invalid Ethernet frame")
+
+    return Ethernet(
+        dst_mac=bytes_to_mac(raw[0:6]),
+        src_mac=bytes_to_mac(raw[6:12]),
+        ethertype=raw[12:14].hex(),
     )
 
 
-# Parse Ethernet
+def parse_ipv4(raw: bytes) -> IPv4:
+    return IPv4(
+        protocol=raw[9],
+        src_ip=bytes_to_ipv4(raw[12:16]),
+        dst_ip=bytes_to_ipv4(raw[16:20]),
+    )
 
 
-def parse_ethernet(raw_data):
-    """
-    Parse Ethernet frame header from raw bytes
-
-    Ethernet frame structure (14 bytes):
-    Bytes 0-5: Destination MAC (6 bytes)
-    Bytes 6-11: Source MAC (6 bytes)
-    Bytes 12-13: EtherType (2 bytes) - 0x0800 = IPv4
-
-    Returns: dict with src_mac, dst_mac, ethertype
-    """
-
-    if len(raw_data) < 14:
-        raise ValueError("Invalid Ethernet frame")
-
-    dst_mac = convert_bytes_to_mac(raw_data[:6])
-    src_mac = convert_bytes_to_mac(raw_data[6:12])
-    ethertype = raw_data[12:14].hex()
-    return {"dst_mac": dst_mac, "src_mac": src_mac, "ethertype": ethertype}
+def parse_ipv6(raw: bytes) -> IPv6:
+    return IPv6(
+        src_ip=bytes_to_ipv6(raw[8:24]),
+        dst_ip=bytes_to_ipv6(raw[24:40]),
+    )
 
 
-# Parse IPv4
+def parse_tcp(raw: bytes) -> TCP:
+    return TCP(
+        src_port=int.from_bytes(raw[0:2], "big"),
+        dst_port=int.from_bytes(raw[2:4], "big"),
+        seq_num=int.from_bytes(raw[4:8], "big"),
+        ack_num=int.from_bytes(raw[8:12], "big"),
+    )
 
 
-def parse_ipv4(raw_data):
-    """
-    Parse IPv4 header from raw bytes
-
-    IPv4 Header (20 bytes minimum):
-    Byte 0: Version (4 bits) + Header Length (4 bits)
-    Byte 1: Type of Service
-    Bytes 2-3: Total Length
-    Bytes 4-5: Identification
-    Bytes 6-7: Flags + Fragment Offset
-    Byte 8: Time to Live (TTL)
-    Byte 9: Protocol (6=TCP, 17=UDP, 1=ICMP)
-    Bytes 10-11: Header Checksum
-    Bytes 12-15: Source IP (4 bytes)
-    Bytes 16-19: Destination IP (4 bytes)
-
-    Returns: protocol, src_ip, dst_ip
-    """
-
-    src_ip = convert_bytes_to_ipv4(raw_data[12:16])
-    dst_ip = convert_bytes_to_ipv4(raw_data[16:20])
-    protocol = int(raw_data[9])
-    return {
-        "protocol": protocol,
-        "src_ip": src_ip,
-        "dst_ip": dst_ip,
-    }
+def parse_udp(raw: bytes) -> UDP:
+    return UDP(
+        src_port=int.from_bytes(raw[0:2], "big"),
+        dst_port=int.from_bytes(raw[2:4], "big"),
+        length=int.from_bytes(raw[4:6], "big"),
+        checksum=int.from_bytes(raw[6:8], "big"),
+    )
 
 
-# Parse IPv6
+def parse_icmpv4(raw: bytes) -> ICMPv4:
+    return ICMPv4(
+        type=raw[0],
+        code=raw[1],
+        checksum=int.from_bytes(raw[2:4], "big"),
+        identifier=int.from_bytes(raw[4:6], "big"),
+        sequence=int.from_bytes(raw[6:8], "big"),
+    )
 
 
-def parse_ipv6(raw_data):
-    """
-    Parse IPv6 header from raw bytes
-
-    IPv6 Header (40 bytes fixed):
-    Bytes 0-3: Version (4 bits) + Traffic Class (8 bits) + Flow Label (20 bits)
-    Bytes 4-5: Payload Length (16 bits)
-    Byte 6: Next Header (8 bits) -> same as IPv4 protocol
-    Byte 7: Hop Limit (8 bits) -> same as TTL
-    Bytes 8-23: Source Address (128 bits, 16 bytes)
-    Bytes 24-39: Destination Address (128 bits, 16 bytes)
-
-    Returns: src_ip, dst_ip
-    """
-    src_ip = convert_bytes_to_ipv6(raw_data[8:24])
-    dst_ip = convert_bytes_to_ipv6(raw_data[24:40])
-    return {
-        "src_ip": src_ip,
-        "dst_ip": dst_ip,
-    }
+def parse_icmpv6(raw: bytes) -> ICMPv6:
+    return ICMPv6(
+        type=raw[0],
+        code=raw[1],
+        checksum=int.from_bytes(raw[2:4], "big"),
+    )
 
 
-# Parse TCP
+# Comparing with Scapy
 
 
-def parse_tcp(raw_data):
-    """
-    Parse TCP header from raw bytes
-
-    TCP Header (minimum 20 bytes):
-    Bytes 0-1: Source Port (16 bits)
-    Bytes 2-3: Destination Port (16 bits)
-    Bytes 4-7: Sequence Number (32 bits)
-    Bytes 8-11: Acknowledgment Number (32 bits)
-    Byte 12: Data Offset (4 bits) + Reserved (4 bits)
-    Byte 13: Flags (8 bits)
-    Bytes 14-15: Window Size (16 bits)
-    Bytes 16-17: Checksum (16 bits)
-    Bytes 18-19: Urgent Pointer (16 bits)
-
-    Returns: dict with src_port, dst_port, seq_num, ack_num
-    """
-
-    src_port = int.from_bytes(raw_data[0:2], byteorder="big")
-    dst_port = int.from_bytes(raw_data[2:4], byteorder="big")
-    seq_num = int.from_bytes(raw_data[4:8], byteorder="big")
-    ack_num = int.from_bytes(raw_data[8:12], byteorder="big")
-
-    return {
-        "src_port": src_port,
-        "dst_port": dst_port,
-        "seq_num": seq_num,
-        "ack_num": ack_num,
-    }
-
-
-# Parse UDP
-
-
-def parse_udp(raw_data):
-    """
-    Parse UDP header from raw bytes
-
-    UDP Header (8 bytes):
-    Bytes 0-1: Source Port (16 bits)
-    Bytes 2-3: Destination Port (16 bits)
-    Bytes 4-5: Length (16 bits)
-    Bytes 6-7: Checksum (16 bits)
-
-    Returns: dict with src_port, dst_port, length, checksum
-    """
-
-    src_port = int.from_bytes(raw_data[0:2], byteorder="big")
-    dst_port = int.from_bytes(raw_data[2:4], byteorder="big")
-    length = int.from_bytes(raw_data[4:6], byteorder="big")
-    checksum = int.from_bytes(raw_data[6:8], byteorder="big")
-
-    return {
-        "src_port": src_port,
-        "dst_port": dst_port,
-        "length": length,
-        "checksum": checksum,
-    }
-
-
-# Parse ICMP for IPv4
-
-
-def parse_icmpv4(raw_data):
-    """
-    Parse ICMP message from raw bytes
-
-    ICMP Header (8 bytes minimum):
-    Byte 0: Type (8 bits)
-    Byte 1: Code (8 bits)
-    Bytes 2-3: Checksum (16 bits)
-    Bytes 4-5: Identifier (16 bits) - for Echo Request/Reply
-    Bytes 6-7: Sequence Number (16 bits) - for Echo Request/Reply
-
-    Returns: dict with type, code, checksum, identifier, sequence
-    """
-
-    type = raw_data[0]
-    code = raw_data[1]
-    checksum = int.from_bytes(raw_data[2:4], byteorder="big")
-    identifier = int.from_bytes(raw_data[4:6], byteorder="big")
-    sequence = int.from_bytes(raw_data[6:8], byteorder="big")
-
-    return {
-        "type": type,
-        "code": code,
-        "checksum": checksum,
-        "identifier": identifier,
-        "sequence": sequence,
-    }
-
-
-# Parse ICMP for IPv6
-
-
-def parse_icmpv6(raw_data):
-    """
-    Parse ICMPv6 message from raw bytes
-
-    ICMPv6 Header (8 bytes minimum):
-    Byte 0: Type (8 bits)
-    Byte 1: Code (8 bits)
-    Bytes 2-3: Checksum (16 bits)
-    Bytes 4-7: Reserved (32 bits)
-
-    Returns: dict with type, code, checksum
-    """
-
-    type = raw_data[0]
-    code = raw_data[1]
-    checksum = int.from_bytes(raw_data[2:4], byteorder="big")
-
-    return {
-        "type": type,
-        "code": code,
-        "checksum": checksum,
-    }
-
-
-# Validate with Scapy's data
-
-
-def compare_with_scapy(packet, manual):
+def compare_with_scapy(packet, manual) -> bool:
     try:
-        # Ethernet
-        if packet.haslayer(Ether):
+        if isinstance(manual, Ethernet) and packet.haslayer(Ether):
             eth = packet[Ether]
-            if manual.get("src_mac") != eth.src or manual.get("dst_mac") != eth.dst:
-                return False
+            return (
+                manual.src_mac == eth.src
+                and manual.dst_mac == eth.dst
+                and manual.ethertype == f"{eth.type:04x}"
+            )
 
-        # IPv4
-        if packet.haslayer(IP):
+        if isinstance(manual, IPv4) and packet.haslayer(IP):
             ip = packet[IP]
-            if manual.get("src_ip") != ip.src or manual.get("dst_ip") != ip.dst:
-                return False
-            if manual.get("protocol") != ip.proto:
-                return False
+            return (
+                manual.src_ip == ip.src
+                and manual.dst_ip == ip.dst
+                and manual.protocol == ip.proto
+            )
 
-        # IPv6
-        if packet.haslayer(IPv6):
+        if isinstance(manual, IPv6) and packet.haslayer(IPv6):
             ip6 = packet[IPv6]
-            if manual.get("src_ip") != ip6.src or manual.get("dst_ip") != ip6.dst:
-                return False
+            return manual.src_ip == ip6.src and manual.dst_ip == ip6.dst
 
-        # TCP
-        if packet.haslayer(TCP):
+        if isinstance(manual, TCP) and packet.haslayer(TCP):
             tcp = packet[TCP]
-            if (
-                manual.get("src_port") != tcp.sport
-                or manual.get("dst_port") != tcp.dport
-            ):
-                return False
-            if manual.get("seq_num") != tcp.seq or manual.get("ack_num") != tcp.ack:
-                return False
+            return (
+                manual.src_port == tcp.sport
+                and manual.dst_port == tcp.dport
+                and manual.seq_num == tcp.seq
+                and manual.ack_num == tcp.ack
+            )
 
-        # UDP
-        if packet.haslayer(UDP):
+        if isinstance(manual, UDP) and packet.haslayer(UDP):
             udp = packet[UDP]
-            if (
-                manual.get("src_port") != udp.sport
-                or manual.get("dst_port") != udp.dport
-            ):
-                return False
+            return manual.src_port == udp.sport and manual.dst_port == udp.dport
 
-        # ICMPv4
-        if packet.haslayer(ICMP):
+        if isinstance(manual, ICMPv4) and packet.haslayer(ICMP):
             icmp = packet[ICMP]
-            if manual.get("type") != icmp.type or manual.get("code") != icmp.code:
-                return False
+            return manual.type == icmp.type and manual.code == icmp.code
 
-        # ICMPv6
-        if packet.haslayer(ICMPv6EchoRequest) or packet.haslayer(ICMPv6EchoReply):
+        if isinstance(manual, ICMPv6):
             icmp6 = packet.getlayer(ICMPv6EchoRequest) or packet.getlayer(
                 ICMPv6EchoReply
             )
-            if manual.get("type") != icmp6.type or manual.get("code") != icmp6.code:
-                return False
+            return icmp6 and manual.type == icmp6.type and manual.code == icmp6.code
 
-        return True
+        return False
 
     except Exception:
         return False
+
+
+# Printing packet info
 
 
 def print_packet_info(packet):
@@ -295,49 +151,57 @@ def print_packet_info(packet):
         eth = parse_ethernet(remaining[:14])
         remaining = remaining[14:]
         print("[Ethernet]")
-        for k, v in eth.items():
-            print(f"  {k}: {v}")
+        print(f"dst_mac: {eth.dst_mac}")
+        print(f"src_mac: {eth.src_mac}")
+        print(f"ethertype: {eth.ethertype}")
 
-        ethertype = eth["ethertype"]
+        ethertype = eth.ethertype
 
         # IPv4
         if ethertype == "0800" and len(remaining) >= 20:
             ip = parse_ipv4(remaining[:20])
             remaining = remaining[20:]
-            print("[IPv4]")
-            for k, v in ip.items():
-                print(f"  {k}: {v}")
+            print(f"src_ip: {ip.src_ip}")
+            print(f"dst_ip: {ip.dst_ip}")
+            print(f"protocol: {ip.protocol}")
 
-            proto = ip["protocol"]
+            proto = ip.protocol
 
             if proto == 6 and len(remaining) >= 20:  # TCP
                 tcp = parse_tcp(remaining[:20])
                 remaining = remaining[20:]
                 print("[TCP]")
-                for k, v in tcp.items():
-                    print(f"  {k}: {v}")
+                print(f"src_port: {tcp.src_port}")
+                print(f"dst_port: {tcp.dst_port}")
+                print(f"seq_num: {tcp.seq_num}")
+                print(f"ack_num: {tcp.ack_num}")
 
             elif proto == 17 and len(remaining) >= 8:  # UDP
                 udp = parse_udp(remaining[:8])
                 remaining = remaining[8:]
                 print("[UDP]")
-                for k, v in udp.items():
-                    print(f"  {k}: {v}")
+                print(f"src_port: {udp.src_port}")
+                print(f"dst_port: {udp.dst_port}")
+                print(f"length: {udp.length}")
+                print(f"checksum: {udp.checksum}")
 
             elif proto == 1 and len(remaining) >= 8:  # ICMPv4
                 icmp = parse_icmpv4(remaining[:8])
                 remaining = remaining[8:]
                 print("[ICMPv4]")
-                for k, v in icmp.items():
-                    print(f"  {k}: {v}")
+                print(f"type: {icmp.type}")
+                print(f"code: {icmp.code}")
+                print(f"checksum: {icmp.checksum}")
+                print(f"identifier: {icmp.identifier}")
+                print(f"sequence: {icmp.sequence}")
 
         # IPv6
         elif ethertype == "86dd" and len(remaining) >= 40:
             ip6 = parse_ipv6(remaining[:40])
             remaining = remaining[40:]
             print("[IPv6]")
-            for k, v in ip6.items():
-                print(f"  {k}: {v}")
+            print(f"src_addr: {ip6.src_ip}")
+            print(f"dst_addr: {ip6.dst_ip}")
 
             # Next header
             next_header = remaining[0] if remaining else None
@@ -345,8 +209,9 @@ def print_packet_info(packet):
                 icmp6 = parse_icmpv6(remaining[:8])
                 remaining = remaining[8:]
                 print("[ICMPv6]")
-                for k, v in icmp6.items():
-                    print(f"  {k}: {v}")
+                print(f"type: {icmp6.type}")
+                print(f"code: {icmp6.code}")
+                print(f"checksum: {icmp6.checksum}")
 
     except Exception as e:
         print(f"[Error parsing packet] {e}")

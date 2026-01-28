@@ -1,0 +1,46 @@
+from typing import NamedTuple
+
+
+class Ethernet(NamedTuple):
+    dst_mac: str
+    src_mac: str
+    ethertype: str
+
+
+class IPv4(NamedTuple):
+    protocol: int
+    src_ip: str
+    dst_ip: str
+
+
+class IPv6(NamedTuple):
+    src_ip: str
+    dst_ip: str
+
+
+class TCP(NamedTuple):
+    src_port: int
+    dst_port: int
+    seq_num: int
+    ack_num: int
+
+
+class UDP(NamedTuple):
+    src_port: int
+    dst_port: int
+    length: int
+    checksum: int
+
+
+class ICMPv4(NamedTuple):
+    type: int
+    code: int
+    checksum: int
+    identifier: int
+    sequence: int
+
+
+class ICMPv6(NamedTuple):
+    type: int
+    code: int
+    checksum: int
