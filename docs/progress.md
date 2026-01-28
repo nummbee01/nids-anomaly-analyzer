@@ -24,188 +24,171 @@ Day 1 COMPLETED SUCCESSFULLY ✅
 - ✅ Real-time packet information display
 - ✅ Comprehensive test coverage for parser
 - ✅ Command-line interface with multiple options
-- ✅ Foundation ready for Day 2 advanced features
+- ✅ Foundation ready for threat detection
 
 ---
-Day 2 Checklist - IMPLEMENTATION PLAN
-Blocking - Must Complete Today
-1. Implement flow tracker
-   - Task: Hash-based flow aggregation with expiration
-   - Expected: FlowTracker class with O(1) lookups
-   - Files: src/core/flow_tracker.py
-   - Priority: Blocking
-   
-2. Create sliding window buffers
-   - Task: Circular buffer implementation for time-series data
-   - Expected: CircularBuffer class with configurable windows
-   - Files: src/utils/statistics.py (extend existing)
-   - Priority: Blocking
-   
-3. Add comprehensive tests
-   - Task: Tests for flow tracking and statistics
-   - Expected: 95%+ coverage for new modules
-   - Files: src/tests/test_flow_tracker.py, src/tests/test_statistics.py
-   - Priority: Blocking
-   
-4. Document algorithms
-   - Task: Inline documentation for data structures
-   - Expected: Algorithm complexity, usage examples
-   - Files: All new modules
-   - Priority: High
+Day 2: SKIPPED - FLOW TRACKING NOT NEEDED ❌
 
-Optional - If Time Permits
-5. Performance profiling
-   - Task: Benchmark packet processing pipeline
-   - Expected: Baseline metrics for optimization
-   - Files: src/tests/performance_tests.py
-   - Priority: Optional
+## Decision: Flow tracking is unnecessary for simple NIDS
+- **Removed**: Flow tracker implementation plans
+- **Reason**: Direct threat detection is more valuable than flow tracking
+- **Focus**: Move directly to threat detection engines (Day 3)
 
 ---
-Day 2 Detailed Implementation Strategy:
+Day 3: THREAT DETECTION ENGINES 🔄 IN PROGRESS
+| Task | Status | Implementation Notes |
+|------|--------|---------------------|
+| Port scan detection | ❌ Not Started | Same IP trying multiple ports in short time |
+| SYN flood detection | ❌ Not Started | Massive SYN packets being sent |
+| IP spoofing detection | ❌ Not Started | Invalid IP headers/packets |
+| ARP spoofing detection | ❌ Not Started | ARP impersonation on local network |
+| DDoS attack detection | ❌ Not Started | High-volume traffic patterns |
+| Malicious payload detection | ❌ Not Started | Known attack signatures |
+| Brute force detection | ❌ Not Started | Repeated login attempts |
+| ICMP flood detection | ❌ Not Started | High ICMP packet volume |
+| DNS tunneling detection | ❌ Not Started | Suspicious DNS query patterns |
+| Unusual protocol detection | ❌ Not Started | Rare/invalid protocol usage |
+| Abnormal traffic patterns | ❌ Not Started | Statistical anomalies |
+| MAC spoofing detection | ❌ Not Started | Invalid MAC addresses |
 
-## 1. Flow Tracker Implementation Plan
+## Threat Detection Implementation Strategy:
 
-### Core Data Structures Needed:
+### Core Detection Functions Needed:
+```python
+# src/core/threat_detectors.py
+def detect_port_scan(packets, time_window=60, threshold=20) -> List[Alert]
+def detect_syn_flood(packets, time_window=10, threshold=1000) -> List[Alert]  
+def detect_ip_spoofing(packet) -> Optional[Alert]
+def detect_arp_spoofing(packets) -> List[Alert]
+def detect_ddos_attack(packets, time_window=30) -> List[Alert]
+def detect_malicious_payload(packet) -> List[Alert]
+def detect_brute_force(packets, time_window=300) -> List[Alert]
+def detect_icmp_flood(packets, time_window=10, threshold=500) -> List[Alert]
+def detect_dns_tunneling(packets) -> List[Alert]
+def detect_unusual_protocols(packets) -> List[Alert]
+def detect_abnormal_patterns(packets) -> List[Alert]
+def detect_mac_spoofing(packets) -> List[Alert]
+```
+
+### Alert System Structure:
+```python
+# src/core/alert_system.py
+Alert = NamedTuple('Alert', [
+    ('timestamp', float),
+    ('threat_type', str),
+    ('severity', str),  # LOW, MEDIUM, HIGH, CRITICAL
+    ('source_ip', str),
+    ('target_ip', str),
+    ('description', str),
+    ('evidence', Dict[str, any])
+])
+
+def generate_alert(threat_type, source_ip, target_ip, description, evidence, severity) -> Alert
+def store_alert(alert) -> None
+def get_recent_alerts(time_window=3600) -> List[Alert]
+def filter_alerts_by_severity(alerts, severity) -> List[Alert]
+```
+
+### Data Structures for Detection:
 ```python
 # Add to data_structures.py
-FlowKey = NamedTuple('FlowKey', [
-    ('src_ip', str),
-    ('dst_ip', str), 
-    ('protocol', int),
-    ('src_port', int),
-    ('dst_port', int)
+Alert = NamedTuple('Alert', [
+    ('timestamp', float),
+    ('threat_type', str),
+    ('severity', str),
+    ('source_ip', str),
+    ('target_ip', str),
+    ('description', str),
+    ('evidence', Dict[str, any])
 ])
 
-FlowRecord = NamedTuple('FlowRecord', [
-    ('key', FlowKey),
-    ('start_time', float),
-    ('last_seen', float),
-    ('packet_count', int),
-    ('byte_count', int),
-    ('flags', frozenset)  # TCP flags, etc.
+DetectionState = NamedTuple('DetectionState', [
+    ('port_scan_attempts', Dict[str, List[float]]),
+    ('syn_packet_counts', Dict[str, int]),
+    ('icmp_packet_counts', Dict[str, int]),
+    ('dns_queries', Dict[str, List[str]]),
+    ('last_cleanup', float)
 ])
 ```
 
-### FlowTracker Class Design:
+---
+Day 3 Detailed Implementation Plan:
+
+## Phase 1: Core Detection Functions
+**Files to create:**
+- `src/core/threat_detectors.py` - All detection logic
+- `src/core/alert_system.py` - Alert generation and storage
+- `src/tests/test_threat_detectors.py` - Detection tests
+
+## Phase 2: Detection State Management
+**Simple counters and time windows:**
 ```python
-class FlowTracker:
-    def __init__(self, timeout=30.0):
-        self.flows = {}  # {FlowKey: FlowRecord}
-        self.timeout = timeout
-        self._lock = threading.RLock()
-    
-    def add_packet(self, packet_info: Ethernet) -> FlowRecord:
-        # O(1) flow lookup/update
-        
-    def cleanup_expired_flows(self) -> int:
-        # Remove flows inactive > timeout
-        
-    def get_flow(self, flow_key: FlowKey) -> Optional[FlowRecord]:
-        # O(1) lookup
-        
-    def get_active_flows(self) -> List[FlowRecord]:
-        # Return list of active flows
+# Instead of complex flow tracking
+detection_state = {
+    'port_scan_attempts': defaultdict(list),      # IP -> [timestamps]
+    'syn_flood_counts': defaultdict(int),          # IP -> packet count
+    'icmp_flood_counts': defaultdict(int),         # IP -> packet count
+    'dns_queries': defaultdict(list),              # IP -> [query_strings]
+    'last_cleanup': time.time()
+}
 ```
 
-## 2. Sliding Window Implementation Plan
-
-### CircularBuffer Class Design:
+## Phase 3: Integration with Packet Pipeline
+**Update main.py:**
 ```python
-class CircularBuffer:
-    def __init__(self, size: int):
-        self.buffer = [None] * size
-        self.size = size
-        self.head = 0  # Write position
-        self.count = 0
-        self._lock = threading.Lock()
-    
-    def add(self, value: float, timestamp: float = None):
-        # O(1) insert with automatic overwrite
-        
-    def get_average(self, window_size: int = None) -> float:
-        # O(window_size) average calculation
-        
-    def get_zscore(self, value: float) -> float:
-        # Statistical anomaly detection
-```
+from core.threat_detectors import *
+from core.alert_system import *
 
-### WindowManager Class Design:
-```python
-class WindowManager:
-    def __init__(self):
-        self.windows = {
-            '1min': CircularBuffer(60),    # 1 sample per second
-            '5min': CircularBuffer(300),   # 5 minutes
-            '15min': CircularBuffer(900)   # 15 minutes
-        }
-    
-    def add_sample(self, value: float):
-        # Add to all windows
-        
-    def get_statistics(self) -> Dict[str, Dict[str, float]]:
-        # Return stats for all windows
-```
-
-## 3. Integration with Existing System
-
-### Update main.py to include flow tracking:
-```python
-from core.flow_tracker import FlowTracker
-from utils.statistics import WindowManager
-
-# Initialize in main()
-flow_tracker = FlowTracker()
-stats_manager = WindowManager()
-
-# Update packet processing in sniffing_interface()
-def process_packet(packet):
+def process_packet_with_detection(packet):
     # Parse packet
     parsed = parse_packet(packet)
     
-    # Track flow
-    flow = flow_tracker.add_packet(parsed)
+    # Run all detection functions
+    alerts = []
+    alerts.extend(detect_port_scan(parsed))
+    alerts.extend(detect_syn_flood(parsed))
+    alerts.extend(detect_icmp_flood(parsed))
+    # ... all other detectors
     
-    # Update statistics
-    stats_manager.add_sample(parsed.size)
-    
-    # Display information
-    print_packet_info(parsed, flow, stats)
+    # Store and display alerts
+    for alert in alerts:
+        store_alert(alert)
+        print_alert(alert)
 ```
 
-## 4. Testing Strategy
-
-### Test Coverage Plan:
-1. **FlowTracker Tests**:
-   - Flow creation from first packet
-   - Flow updates from subsequent packets
-   - Flow expiration after timeout
-   - Concurrent access thread safety
-   - Memory cleanup verification
-
-2. **Statistics Tests**:
-   - Circular buffer add/overwrite behavior
-   - Moving average calculations
-   - Z-score accuracy
-   - Multiple window management
-   - Edge cases (empty, single, full buffers)
-
-3. **Integration Tests**:
-   - End-to-end packet flow
-   - Performance under load
-   - Memory usage verification
-
 ---
-Critical Issues / Risks for Day 2:
-1. Thread Safety: Flow tracker needs proper locking for concurrent packet processing
-2. Memory Management: Circular buffers must handle overflow gracefully
-3. Performance: O(1) operations essential for real-time processing
-4. Integration: Need to connect new components with existing packet pipeline
+Critical Implementation Requirements:
+
+### 1. Time-Based Detection Windows
+- **Port Scans**: 60-second windows, 20+ different ports
+- **SYN Floods**: 10-second windows, 1000+ SYN packets
+- **ICMP Floods**: 10-second windows, 500+ ICMP packets
+- **Brute Force**: 5-minute windows, repeated login attempts
+
+### 2. Evidence Collection
+- **Source IP, Target IP, Protocol, Ports**
+- **Packet counts, timestamps, payload samples**
+- **Pattern matches, statistical deviations**
+
+### 3. Alert Severity Classification
+- **CRITICAL**: Active attacks (SYN flood, DDoS)
+- **HIGH**: Suspicious patterns (port scans, brute force)
+- **MEDIUM**: Anomalies (unusual protocols, abnormal traffic)
+- **LOW**: Informational (spoofing attempts)
 
 ---
 Next Concrete Actions (Ordered):
-1. Extend data_structures.py with FlowKey and FlowRecord
-2. Implement src/core/flow_tracker.py with hash-based tracking
-3. Create src/utils/statistics.py with circular buffer implementation
-4. Add comprehensive test coverage for both modules
-5. Update main.py to demonstrate flow tracking and statistics
-6. Run integration tests to verify Day 2 completion
+1. **Create Alert data structure** in `data_structures.py`
+2. **Implement threat_detectors.py** with core detection functions
+3. **Create alert_system.py** for alert management
+4. **Update main.py** to integrate threat detection
+5. **Add comprehensive tests** for all detection functions
+6. **Test with real network traffic** to validate detection accuracy
+
+---
+Files to Review and Update:
+- `docs/plan.md` - Remove Day 2 flow tracking, update Day 3
+- `docs/progress.md` - Current status and implementation plan
+- `src/utils/data_structures.py` - Add Alert and DetectionState structures
+- `main.py` - Integrate threat detection pipeline
+- `README.md` - Update with threat detection capabilities

@@ -87,47 +87,56 @@ Day 1: Foundation Setup ✅ COMPLETED
 - [x] Create immutable data structures for packet info
 - [x] Write unit tests for packet capture functions
 
-Day 2: Core Processing Pipeline 🔄 IN PROGRESS
+Day 2: Core Processing Pipeline ⏭️ SKIPPED
 - [x] Build packet parser with functional transformations
-- [ ] Implement flow tracking with hash tables
-- [ ] Create sliding window buffers for time-series
-- [ ] Add comprehensive unit tests
-- [ ] Document data structures and algorithms
+- [x] Skip flow tracking (not needed for simple NIDS)
+- [x] Skip sliding window buffers (not needed for threat detection)
+- [x] Skip complex statistics (use simple counters)
+- [x] Skip over-engineering (focus on threat detection)
 
-Day 3: Detection Engines
-- [ ] Implement rule-based detection engine
-- [ ] Build statistical anomaly detection functions
-- [ ] Create alert scoring and classification
-- [ ] Add detection engine unit tests
-- [ ] Optimize time complexity of detection algorithms
+Day 3: THREAT DETECTION ENGINES 🔄 IN PROGRESS
+- [ ] Port scan detection (same IP, multiple ports, short time)
+- [ ] SYN flood detection (massive SYN packets)
+- [ ] IP spoofing detection (invalid/fake IP headers)
+- [ ] ARP spoofing detection (local network impersonation)
+- [ ] DDoS attack detection (high-volume traffic patterns)
+- [ ] Malicious payload detection (known attack signatures)
+- [ ] Brute force detection (repeated login attempts)
+- [ ] ICMP flood detection (high ICMP packet volume)
+- [ ] DNS tunneling detection (suspicious DNS patterns)
+- [ ] Unusual protocol usage (rare/invalid protocols)
+- [ ] Abnormal traffic patterns (statistical anomalies)
+- [ ] MAC spoofing detection (invalid MAC addresses)
+- [ ] Alert system implementation
+- [ ] Detection engine unit tests
 
-Day 4: Alert System & Storage
-- [ ] Implement alert generation and prioritization
-- [ ] Create file-based alert storage system
-- [ ] Add alert filtering and searching functions
-- [ ] Build alert system unit tests
-- [ ] Design alert serialization format
+Day 4: GUI & Integration (Moved from Day 5)
+- [ ] Create basic GUI framework for real-time alerts
+- [ ] Implement packet display with threat indicators
+- [ ] Build alert panel with filtering capabilities
+- [ ] Add basic control buttons (Start/Stop/Clear/Export)
+- [ ] Integrate threat detection with GUI
+- [ ] Test GUI responsiveness with real threats
 
-Day 5: Basic GUI Framework
-- [ ] Create main Tkinter window layout
-- [ ] Implement packet display with real-time updates
-- [ ] Build alert panel with sorting/filtering
-- [ ] Add basic control buttons (Start/Stop/Clear)
-- [ ] Test GUI responsiveness with mock data
+Day 5: Advanced Features & Performance
+- [ ] Add configuration panel for detection thresholds
+- [ ] Implement statistics dashboard for threats
+- [ ] Create alert export functionality (JSON/CSV)
+- [ ] Add packet drill-down views with context
+- [ ] Performance optimization for high-traffic environments
 
-Day 6: Advanced GUI Features
-- [ ] Add configuration panel for settings
-- [ ] Implement statistics dashboard
-- [ ] Create export functionality
-- [ ] Add packet drill-down views
-- [ ] Integrate GUI with backend systems
-
-Day 7: Integration & Testing
-- [ ] Full end-to-end system testing
-- [ ] Performance optimization and profiling
-- [ ] Complete documentation and README
+Day 6: Integration & Testing
+- [ ] Full end-to-end system testing with real attacks
+- [ ] Performance benchmarking and profiling
+- [ ] Complete documentation and README with threat examples
 - [ ] Fix remaining bugs and edge cases
 - [ ] Final code review and cleanup
+
+Day 7: DEPLOYMENT & VALIDATION
+- [ ] Test against real-world attack scenarios
+- [ ] Create installation scripts and setup guide
+- [ ] User manual with threat detection examples
+- [ ] Final validation and deployment preparation
 
 Technical Implementation Details
 

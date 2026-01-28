@@ -7,13 +7,13 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from core.packet_capture import select_interface, sniffing_interface
 from core.packet_parser import print_packet_info
-from utils.data_structures import *
+from utils.data_structures import Alert, DetectionState
 
 
 def main():
     # Shown in --help
     parser = argparse.ArgumentParser(
-        description="Argus NIDS + Anomaly Analyzer",
+        description="Argus NIDS - Network Intrusion Detection System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

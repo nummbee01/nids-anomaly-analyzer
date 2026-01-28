@@ -69,3 +69,9 @@ Learned the basics of Scapy, including how to make packets, send packets, sniff 
 - Unusual protocol usage
 - Abnormal traffic patterns
 - MAC spoofing
+
+# Day 3 
+
+Parsed the data successfully and created custom data structures to store the information.
+
+Next, I'll implement the rule-based detection system.
