@@ -75,3 +75,18 @@ Learned the basics of Scapy, including how to make packets, send packets, sniff 
 Parsed the data successfully and created custom data structures to store the information.
 
 Next, I'll implement the rule-based detection system.
+
+# Day 4
+
+- Implemented rule-based threat detection system with 12 detection algorithms
+- Made all detection thresholds configurable via constants at the top of threat_detectors.py
+- Reduced false positives by adding filtering logic for spoofing detection and increasing threshold values
+- Refactored packet_capture.py to use callback architecture for GUI integration
+- Built complete Tkinter GUI with:
+  - Dashboard: packet logs, threat alerts, statistics, matplotlib graph placeholder
+  - Configuration view: editable threshold fields
+  - Dynamic Start/Stop button, Clear Logs button, Export Logs button
+- Added JSON export for logs and configuration save functionality
+- Cleaned up code by removing excessive comments
+- Created .gitignore file
+- Switched from CLI-focused to GUI-focused architecture

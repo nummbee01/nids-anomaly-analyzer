@@ -1,10 +1,6 @@
 from dataclasses import asdict
-
 from scapy.all import *
-
 from src.utils.data_structures import *
-
-# Converting bytes to data structures
 
 
 def bytes_to_mac(b: bytes) -> str:
@@ -17,9 +13,6 @@ def bytes_to_ipv4(b: bytes) -> str:
 
 def bytes_to_ipv6(b: bytes) -> str:
     return ":".join(f"{b[i]:02x}{b[i + 1]:02x}" for i in range(0, 16, 2))
-
-
-# Parsers
 
 
 def parse_ethernet(raw: bytes) -> Ethernet:
@@ -84,9 +77,6 @@ def parse_icmpv6(raw: bytes) -> ICMPv6:
     )
 
 
-# Comparing with Scapy
-
-
 def compare_with_scapy(packet, manual) -> bool:
     try:
         if isinstance(manual, Ethernet) and packet.haslayer(Ether):
@@ -136,9 +126,6 @@ def compare_with_scapy(packet, manual) -> bool:
 
     except Exception:
         return False
-
-
-# Printing packet info
 
 
 def print_packet_info(packet):
