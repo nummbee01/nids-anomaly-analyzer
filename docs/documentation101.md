@@ -7,16 +7,15 @@ This technical reference explains the Argus Network Intrusion Detection System f
 ## Table of Contents
 
 1. [What is Argus NIDS?](#what-is-argus-nids)
-2. [How Does It Work? (Big Picture)](#how-does-it-work-big-picture)
+2. [How Does It Work?](#how-does-it-work)
 3. [Project Structure](#project-structure)
 4. [Understanding Network Basics](#understanding-network-basics)
 5. [Data Structures Explained](#data-structures-explained)
 6. [Packet Parsing - Breaking Down Network Data](#packet-parsing)
-7. [Threat Detection - The Brain](#threat-detection)
+7. [Threat Detection](#threat-detection)
 8. [Packet Capture - Listening to the Network](#packet-capture)
 9. [The GUI - User Interface](#the-gui)
 10. [Configuration System](#configuration-system)
-11. [Running the System](#running-the-system)
 
 ---
 
@@ -40,7 +39,7 @@ Argus functions as a security guard for computer networks. Similar to how a secu
 
 ---
 
-## How Does It Work? (Big Picture)
+## How Does It Work?
 
 The basic flow of Argus operation:
 
@@ -126,16 +125,16 @@ Network data is organized in layers, each wrapping the previous one:
 
 **1. Ethernet Layer** (Physical)
 - Contains MAC addresses (unique hardware identifiers)
-- Like the physical envelope with stamps
+- Handles physical transmission of data frames
 
 **2. IP Layer** (Internet Protocol)
 - Contains IP addresses (like 192.168.1.1)
-- Like the mailing address on the envelope
+- Provides routing information for packets across networks
 
 **3. Transport Layer** (TCP/UDP)
-- TCP: Reliable delivery (like certified mail)
-- UDP: Fast delivery (like regular mail, might get lost)
-- Contains port numbers (like apartment numbers)
+- TCP: Reliable delivery with acknowledgments
+- UDP: Fast delivery without guarantees
+- Contains port numbers to identify applications
 
 **4. Application Layer**
 - The actual data content
@@ -144,15 +143,15 @@ Network data is organized in layers, each wrapping the previous one:
 
 **IP Address**: A unique number identifying a device on the network
 - Example: `192.168.1.100`
-- Like a house address
+- Used for routing packets to the correct destination
 
 **MAC Address**: A unique hardware identifier burned into network cards
 - Example: `aa:bb:cc:dd:ee:ff`
-- Like a serial number on a mailbox
+- Used for local network communication within the same subnet
 
 **Port**: A number identifying which application should receive the data
 - Example: Port 80 = Web traffic, Port 22 = SSH (remote login)
-- Like apartment numbers in a building
+- Allows multiple applications to use the network simultaneously
 
 **Protocol**: The "language" or rules for communication
 - TCP (Protocol 6): Reliable, ordered delivery
@@ -163,7 +162,7 @@ Network data is organized in layers, each wrapping the previous one:
 
 ## Data Structures Explained
 
-Argus uses **NamedTuples** to store packet information. These are immutable data structures with named fields, similar to labeled containers where each compartment has a specific name.
+Argus uses **NamedTuples** to store packet information. These are immutable data structures with named fields.
 
 ### File: `src/utils/data_structures.py`
 
@@ -183,7 +182,10 @@ class Ethernet(NamedTuple):
 - `src_mac`: Source MAC address (where it came from)
 - `ethertype`: What type of data is inside (like "0800" for IPv4)
 
-**Real-world analogy**: Like the outside of an envelope showing sender and recipient addresses.
+**Used in:**
+- `packet_parser.py`: `parse_ethernet()` function creates this structure from raw packet bytes
+- `packet_capture.py`: Passed to `analyze_packet()` for threat detection
+- `threat_detectors.py`: Used in MAC spoofing and ARP spoofing detection
 
 #### IPv4 Structure
 
@@ -199,7 +201,10 @@ class IPv4(NamedTuple):
 - `src_ip`: Source IP address (like "192.168.1.100")
 - `dst_ip`: Destination IP address (like "8.8.8.8")
 
-**Real-world analogy**: Like the addressing information written on the letter itself.
+**Used in:**
+- `packet_parser.py`: `parse_ipv4()` function creates this structure from IP header bytes
+- `packet_capture.py`: Determines which transport layer parser to use (TCP/UDP/ICMP)
+- `threat_detectors.py`: Used in IP spoofing, DDoS, malicious packet, port scan, and brute force detection
 
 #### IPv6 Structure
 
@@ -231,7 +236,10 @@ class TCP(NamedTuple):
 - `seq_num`: Sequence number (for ordering packets)
 - `ack_num`: Acknowledgment number (confirms receipt)
 
-**Real-world analogy**: Like tracking numbers on packages to ensure they arrive in order.
+**Used in:**
+- `packet_parser.py`: `parse_tcp()` function creates this structure from TCP header bytes
+- `packet_capture.py`: Passed to `analyze_packet()` for threat analysis
+- `threat_detectors.py`: Used in SYN flood detection (checks if `ack_num == 0`), port scan detection, and brute force detection
 
 **Special note about `ack_num`:**
 - If `ack_num == 0`, this is a **SYN packet** (connection request)
@@ -254,7 +262,12 @@ class UDP(NamedTuple):
 - `length`: How long the data is
 - `checksum`: Error-checking value
 
-**Difference from TCP**: UDP is faster but doesn't guarantee delivery (like sending a postcard vs. certified mail).
+**Difference from TCP**: UDP is faster but doesn't guarantee delivery or ordering.
+
+**Used in:**
+- `packet_parser.py`: `parse_udp()` function creates this structure from UDP header bytes
+- `packet_capture.py`: Passed to `analyze_packet()` for threat analysis
+- `threat_detectors.py`: Used in DNS tunneling detection (checks for port 53) and port scan detection
 
 #### ICMP Structures
 
@@ -278,6 +291,11 @@ class ICMPv6(NamedTuple):
 - `identifier` & `sequence`: For matching requests with replies
 
 **What is ICMP?**: Used for network diagnostics and error messages (like the "ping" command).
+
+**Used in:**
+- `packet_parser.py`: `parse_icmpv4()` and `parse_icmpv6()` functions create these structures
+- `packet_capture.py`: Passed to `analyze_packet()` for threat analysis
+- `threat_detectors.py`: Used in ICMP flood detection
 
 ---
 
@@ -529,7 +547,7 @@ def parse_icmpv6(raw: bytes) -> ICMPv6:
 
 ---
 
-## Threat Detection - The Brain
+## Threat Detection
 
 This is the most important part of Argus! The threat detection system analyzes packets and identifies 12 different types of attacks.
 
@@ -1789,99 +1807,8 @@ Saving configuration creates `src/config.json`:
 }
 ```
 
----
-
-## Running the System
-
-### Prerequisites
-
-1. **Python 3.7 or higher**
-2. **Required libraries** (install with pip):
-   ```bash
-   pip install -r requirements.txt
-   ```
-   This installs:
-   - `scapy` - For packet capture and parsing
-   - `pytest` - For running tests
-   - `pytest-cov` - For test coverage
-   - `hypothesis` - For property-based testing
-
-3. **Root/Administrator privileges** (required for packet capture)
-
-### Running the GUI (Recommended)
-
-```bash
-sudo python3 src/gui/gui.py
-```
-
-**Why sudo?**
-- Packet capture requires root privileges
-- It needs direct access to network interfaces
-- Without sudo, a "Permission denied" error will occur
-
-**Expected behavior:**
-1. GUI window opens
-2. Click "Start" to begin monitoring
-3. Logs appear in left column
-4. Alerts appear in right column
-5. Statistics update in real-time
-6. Click "Stop" to pause monitoring
-7. Click "Export Logs" to save results
-
-### Running the CLI (For Testing)
-
-```bash
-sudo python3 main.py -i eth0
-```
-
-**Options:**
-- `-i eth0` - Specify network interface
-- `-c 100` - Capture only 100 packets
-- `--list-interfaces` - Show available interfaces
-- `--verbose` - Show more details
-- `--show-packets` - Display each packet
-
-**Examples:**
-```bash
-# List available interfaces
-python3 main.py --list-interfaces
-
-# Capture 100 packets from eth0
-sudo python3 main.py -i eth0 -c 100
-
-# Capture with verbose output
-sudo python3 main.py -i eth0 --verbose --show-packets
-```
-
-### Stopping the System
-
-**GUI:**
-- Click the "Stop" button
-- Or close the window
-
-**CLI:**
-- Press `Ctrl+C`
-- Shows summary of packets analyzed and threats detected
-
-### Troubleshooting
-
-**Problem: "Permission denied"**
-- Solution: Run with `sudo`
-
-**Problem: "No module named 'scapy'"**
-- Solution: Install requirements: `pip install -r requirements.txt`
-
-**Problem: "Interface not found"**
-- Solution: List interfaces with `--list-interfaces` and choose a valid one
-
-**Problem: "No packets captured"**
-- Solution: Verify the correct interface is selected and network traffic is present
-
-**Problem: GUI doesn't open**
-- Solution: Ensure Tkinter is installed (usually comes with Python)
-- On Linux: `sudo apt-get install python3-tk`
 
 ---
 
 **Made by Binam Adhikari 2026**
-
+**Made with love in Arch Linux btw ❤️**
