@@ -1,6 +1,5 @@
 from time import time
 
-
 # Configurable Detection Thresholds
 
 # Port Scan Detection
@@ -68,7 +67,9 @@ def detect_port_scan(state, src_ip, dst_port):
         state["port_scans"][src_ip] = []
 
     # Clean old entries
-    state["port_scans"][src_ip] = clean_old_entries(state["port_scans"][src_ip], PORT_SCAN_WINDOW)
+    state["port_scans"][src_ip] = clean_old_entries(
+        state["port_scans"][src_ip], PORT_SCAN_WINDOW
+    )
     state["port_scans"][src_ip].append((now, dst_port))
 
     # Check unique ports
@@ -90,18 +91,16 @@ def detect_syn_flood(state, src_ip):
     state["syn_floods"][src_ip].append(now)
 
     if len(state["syn_floods"][src_ip]) >= SYN_FLOOD_THRESHOLD:
-        return (
-            f"SYN Flood: {src_ip} sent {len(state['syn_floods'][src_ip])} SYN packets in {SYN_FLOOD_WINDOW}s"
-        )
+        return f"SYN Flood: {src_ip} sent {len(state['syn_floods'][src_ip])} SYN packets in {SYN_FLOOD_WINDOW}s"
     return None
 
 
 def detect_ip_spoofing(state, src_ip, src_mac):
     """Detect IP used with multiple MAC addresses"""
     # Skip private/DHCP ranges to reduce false positives
-    if src_ip.startswith(('169.254.', '0.0.0.0', '255.255.255.255')):
+    if src_ip.startswith(("169.254.", "0.0.0.0", "255.255.255.255")):
         return None
-    
+
     if src_ip not in state["ip_macs"]:
         state["ip_macs"][src_ip] = set()
 
@@ -115,9 +114,9 @@ def detect_ip_spoofing(state, src_ip, src_mac):
 def detect_arp_spoofing(state, ip, mac):
     """Detect IP-MAC binding changes"""
     # Skip broadcast and multicast addresses
-    if ip.startswith(('255.', '224.', '169.254.', '0.0.0.0')):
+    if ip.startswith(("255.", "224.", "169.254.", "0.0.0.0")):
         return None
-    
+
     if ip in state["arp_table"]:
         if state["arp_table"][ip] != mac:
             # Track changes instead of alerting immediately
@@ -125,23 +124,23 @@ def detect_arp_spoofing(state, ip, mac):
                 state["arp_changes"] = {}
             if ip not in state["arp_changes"]:
                 state["arp_changes"][ip] = []
-            
+
             now = time()
             state["arp_changes"][ip] = [
                 t for t in state["arp_changes"][ip] if t >= now - SPOOFING_WINDOW
             ]
             state["arp_changes"][ip].append(now)
-            
+
             # Only alert if multiple changes in short time
             if len(state["arp_changes"][ip]) >= 3:
                 old_mac = state["arp_table"][ip]
                 state["arp_table"][ip] = mac
                 return f"ARP Spoofing: {ip} changed MAC {len(state['arp_changes'][ip])} times (now {mac})"
-            
+
             state["arp_table"][ip] = mac
     else:
         state["arp_table"][ip] = mac
-    
+
     return None
 
 
@@ -179,7 +178,9 @@ def detect_brute_force(state, src_ip, dst_port):
     if key not in state["brute_force"]:
         state["brute_force"][key] = []
 
-    state["brute_force"][key] = [t for t in state["brute_force"][key] if t >= now - BRUTE_FORCE_WINDOW]
+    state["brute_force"][key] = [
+        t for t in state["brute_force"][key] if t >= now - BRUTE_FORCE_WINDOW
+    ]
     state["brute_force"][key].append(now)
 
     if len(state["brute_force"][key]) >= BRUTE_FORCE_THRESHOLD:
@@ -209,16 +210,19 @@ def detect_dns_tunneling(state, src_ip, query_length=0):
     if src_ip not in state["dns_queries"]:
         state["dns_queries"][src_ip] = []
 
-    state["dns_queries"][src_ip] = clean_old_entries(state["dns_queries"][src_ip], DNS_TUNNELING_WINDOW)
+    state["dns_queries"][src_ip] = clean_old_entries(
+        state["dns_queries"][src_ip], DNS_TUNNELING_WINDOW
+    )
     state["dns_queries"][src_ip].append((now, query_length))
 
     queries = state["dns_queries"][src_ip]
     long_queries = sum(1 for _, l in queries if l > DNS_TUNNELING_LONG_QUERY_LENGTH)
 
-    if len(queries) >= DNS_TUNNELING_QUERY_THRESHOLD or (len(queries) > 10 and long_queries > len(queries) * DNS_TUNNELING_LONG_QUERY_RATIO):
-        return (
-            f"DNS Tunneling: {src_ip} made {len(queries)} queries ({long_queries} long) in {DNS_TUNNELING_WINDOW}s"
-        )
+    if len(queries) >= DNS_TUNNELING_QUERY_THRESHOLD or (
+        len(queries) > 10
+        and long_queries > len(queries) * DNS_TUNNELING_LONG_QUERY_RATIO
+    ):
+        return f"DNS Tunneling: {src_ip} made {len(queries)} queries ({long_queries} long) in {DNS_TUNNELING_WINDOW}s"
     return None
 
 
@@ -231,7 +235,7 @@ def detect_unusual_protocol(state, protocol, src_ip):
 
     # Only alert after seeing the same unusual protocol multiple times
     state["unusual_protos"][protocol] = state["unusual_protos"].get(protocol, 0) + 1
-    
+
     if state["unusual_protos"][protocol] >= 10:
         return f"Unusual Protocol: {protocol} from {src_ip} (seen {state['unusual_protos'][protocol]} times)"
     return None
@@ -243,30 +247,48 @@ def detect_abnormal_traffic(state, src_ip):
     if src_ip not in state["traffic"]:
         state["traffic"][src_ip] = []
 
-    state["traffic"][src_ip] = [t for t in state["traffic"][src_ip] if t >= now - ABNORMAL_TRAFFIC_WINDOW]
+    state["traffic"][src_ip] = [
+        t for t in state["traffic"][src_ip] if t >= now - ABNORMAL_TRAFFIC_WINDOW
+    ]
     state["traffic"][src_ip].append(now)
 
     if len(state["traffic"][src_ip]) >= ABNORMAL_TRAFFIC_THRESHOLD:
-        return (
-            f"Abnormal Traffic: {src_ip} sent {len(state['traffic'][src_ip])} packets in {ABNORMAL_TRAFFIC_WINDOW}s"
-        )
+        return f"Abnormal Traffic: {src_ip} sent {len(state['traffic'][src_ip])} packets in {ABNORMAL_TRAFFIC_WINDOW}s"
     return None
 
 
-def detect_mac_spoofing(state, src_mac, src_ip):
-    """Detect MAC used with multiple IPs"""
-    # Skip broadcast/multicast MACs
-    if src_mac.startswith(('ff:ff:', '01:00:5e:', '33:33:')):
-        return None
-    
-    if src_mac not in state["mac_ips"]:
-        state["mac_ips"][src_mac] = set()
-
-    state["mac_ips"][src_mac].add(src_ip)
-
-    if len(state["mac_ips"][src_mac]) >= SPOOFING_THRESHOLD:
-        return f"MAC Spoofing: {src_mac} seen with {len(state['mac_ips'][src_mac])} different IPs"
-    return None
+# MAC SPOOFING
+# Commented out due to false positives
+# def detect_mac_spoofing(state, src_mac, src_ip):
+#     """Detect MAC used with multiple IPs"""
+#     # Skip broadcast/multicast MACs
+#     if src_mac.startswith(('ff:ff:', '01:00:5e:', '33:33:')):
+#         return None
+#
+#     # Skip common gateway/router IP ranges that legitimately use one MAC for multiple IPs
+#     # This includes DHCP servers, NAT gateways, and routers
+#     # Skip private network gateway IPs (typically .1, .254) and DHCP ranges
+#     if src_ip.startswith(('192.168.', '10.', '172.16.', '172.17.', '172.18.', '172.19.',
+#                           '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.',
+#                           '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.')):
+#         # Check if it's a gateway IP (ends with .1 or .254)
+#         octets = src_ip.split('.')
+#         if len(octets) == 4 and octets[3] in ('1', '254'):
+#             return None
+#
+#     # Skip link-local and special addresses
+#     if src_ip.startswith(('169.254.', '0.0.0.0', '255.255.255.255', '127.')):
+#         return None
+#
+#     if src_mac not in state["mac_ips"]:
+#         state["mac_ips"][src_mac] = set()
+#
+#     state["mac_ips"][src_mac].add(src_ip)
+#
+#     # Increase threshold to reduce false positives (routers can serve many IPs)
+#     if len(state["mac_ips"][src_mac]) >= 10:
+#         return f"MAC Spoofing: {src_mac} seen with {len(state['mac_ips'][src_mac])} different IPs"
+#     return None
 
 
 def analyze_packet(
@@ -282,9 +304,10 @@ def analyze_packet(
 
     # Run detectors
     if src_mac and src_ip:
-        alert = detect_mac_spoofing(state, src_mac, src_ip)
-        if alert:
-            alerts.append(alert)
+        # COMMENTED OUT: MAC Spoofing detection disabled
+        # alert = detect_mac_spoofing(state, src_mac, src_ip)
+        # if alert:
+        #     alerts.append(alert)
 
         alert = detect_ip_spoofing(state, src_ip, src_mac)
         if alert:

@@ -90,3 +90,34 @@ Next, I'll implement the rule-based detection system.
 - Cleaned up code by removing excessive comments
 - Created .gitignore file
 - Switched from CLI-focused to GUI-focused architecture
+
+# Day 5
+
+- Fixed Stop button functionality by implementing AsyncSniffer instead of blocking sniff()
+  - Modified packet_capture.py to return AsyncSniffer object for controllable start/stop
+  - Updated GUI to store sniffer object and call .stop() method when stopping
+  - Stop button now properly terminates packet capture immediately
+- Changed default network interface to wlan0 (wireless) with fallback logic
+  - Prefers wlan0 if available, otherwise uses first available interface
+  - Falls back to eth0 if no interfaces detected
+- Disabled MAC Spoofing detection due to excessive false positives
+  - Commented out detect_mac_spoofing() function in threat_detectors.py
+  - Removed MAC spoofing from GUI statistics display (11 threat categories instead of 12)
+  - False positives caused by legitimate routers, gateways, DHCP servers, and NAT devices
+- Implemented thread-safety improvements in GUI
+  - Wrapped all GUI updates in root.after(0, update_gui) to ensure main thread execution
+  - Prevents race conditions and crashes from cross-thread widget access
+- Fixed blank timestamp lines in packet logs
+  - Modified gui_callback() to only insert log entries when IPv4 or IPv6 data exists
+  - Filters out non-IP packets (ARP, malformed packets) for cleaner log output
+- Integrated GUI with main.py as primary entry point
+  - Removed all CLI functionality from main.py
+  - Application now launches GUI directly with python3 main.py
+- Added network interface dropdown menu in Configuration view
+  - Replaced text entry with Combobox widget showing all available interfaces
+  - Read-only mode prevents invalid interface names
+- Updated documentation101.md with all recent changes
+  - Integrated AsyncSniffer documentation in Packet Capture section
+  - Documented MAC Spoofing disable with explanation in Threat Detection section
+  - Added GUI improvements sections for thread-safety, interface selection, and log filtering
+  - Removed changelog section and integrated information into appropriate technical sections

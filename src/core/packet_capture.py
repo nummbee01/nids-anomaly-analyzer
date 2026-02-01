@@ -1,4 +1,4 @@
-from scapy.all import sniff, get_if_list
+from scapy.all import AsyncSniffer, get_if_list
 
 from .packet_parser import (
     parse_ethernet,
@@ -98,10 +98,13 @@ def create_packet_handler(state, callback=None):
 
 
 def start_capture(interface, state, callback=None, count=0):
+    """Start packet capture and return AsyncSniffer object for control"""
     handler = create_packet_handler(state, callback)
-    sniff(
+    sniffer = AsyncSniffer(
         iface=interface,
         prn=handler,
         count=count if count > 0 else 0,
         store=False,
     )
+    sniffer.start()
+    return sniffer

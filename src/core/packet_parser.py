@@ -1,6 +1,6 @@
-from dataclasses import asdict
 from scapy.all import *
-from src.utils.data_structures import *
+
+from utils.data_structures import *
 
 
 def bytes_to_mac(b: bytes) -> str:
