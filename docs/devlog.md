@@ -83,7 +83,7 @@ Next, I'll implement the rule-based detection system.
 - Reduced false positives by adding filtering logic for spoofing detection and increasing threshold values
 - Refactored packet_capture.py to use callback architecture for GUI integration
 - Built complete Tkinter GUI with:
-  - Dashboard: packet logs, threat alerts, statistics, matplotlib graph placeholder
+  - Dashboard: packet logs, threat alerts, statistics
   - Configuration view: editable threshold fields
   - Dynamic Start/Stop button, Clear Logs button, Export Logs button
 - Added JSON export for logs and configuration save functionality
@@ -97,8 +97,8 @@ Next, I'll implement the rule-based detection system.
   - Modified packet_capture.py to return AsyncSniffer object for controllable start/stop
   - Updated GUI to store sniffer object and call .stop() method when stopping
   - Stop button now properly terminates packet capture immediately
-- Changed default network interface to wlan0 (wireless) with fallback logic
-  - Prefers wlan0 if available, otherwise uses first available interface
+- Changed default network interface to wlp8s0 (wireless) with fallback logic
+  - Prefers wlp8s0 if available, otherwise uses first available interface
   - Falls back to eth0 if no interfaces detected
 - Disabled MAC Spoofing detection due to excessive false positives
   - Commented out detect_mac_spoofing() function in threat_detectors.py

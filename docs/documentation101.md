@@ -1341,18 +1341,18 @@ def select_interface():
         choice = int(input("Select an interface: "))
     except ValueError:
         print("Invalid input")
-        print(f"Auto-selecting {interfaces[2]} for testing")
-        return interfaces[2]
+        print(f"Auto-selecting {interfaces[0]} for testing")
+        return interfaces[0]
     if choice < 0 or choice >= len(interfaces):
         print("Invalid choice")
-        print(f"Auto-selecting {interfaces[2]} for testing")
-        return interfaces[2]
+        print(f"Auto-selecting {interfaces[0]} for testing")
+        return interfaces[0]
     return interfaces[choice]
 ```
 
 **What is a network interface?**
 - A network interface is like a "door" through which network traffic flows
-- Examples: `eth0` (Ethernet cable), `wlan0` (WiFi), `lo` (loopback - internal)
+- Examples: `eth0` (Ethernet cable), `wlp8s0` (WiFi), `lo` (loopback - internal)
 - Your computer might have multiple interfaces
 
 **What this function does:**
@@ -1373,7 +1373,7 @@ Available interfaces:
 0 - lo (loopback, internal only)
 1 - docker0 (Docker virtual network)
 2 - eth0 (Ethernet cable)
-3 - wlan0 (WiFi)
+3 - wlp8s0 (WiFi)
 
 User selects: 2
 Returns: "eth0"
@@ -1592,10 +1592,9 @@ The dashboard is the main monitoring screen with several sections:
 - **Left: Packet Logs** - Shows all captured packets with timestamps, IPs, ports, protocols
 - **Right: Threat Alerts** - Shows detected threats in red
 
-**Threats Over Time Graph:**
-- Placeholder area for matplotlib graph
-- Will show real-time graph of total threats detected
-- Currently shows placeholder text
+**Statistics:**
+- Dashboard shows real-time statistics
+- Will show total packets and threats detected
 
 **Statistics Cards:**
 - 12 cards showing different threat counts

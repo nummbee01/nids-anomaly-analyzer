@@ -585,29 +585,6 @@ def create_gui():
     alerts_text.pack(fill="both", expand=True, padx=5, pady=5)
     alerts_text.configure(state="disabled")
 
-    # Matplotlib graph section for threats over time
-    graph_frame = tk.LabelFrame(
-        dashboard_frame,
-        text="📈 Threats Over Time",
-        font=("Arial", 11, "bold"),
-        fg=colors["text"],
-        bg=colors["bg_dark"],
-        relief="flat",
-    )
-    graph_frame.pack(fill="x", padx=20, pady=(10, 10))
-
-    # Placeholder for matplotlib graph
-    graph_placeholder = tk.Label(
-        graph_frame,
-        text="[Matplotlib Graph Area]\nReal-time graph showing total threats detected over time will be displayed here",
-        font=("Arial", 10),
-        fg=colors["text_dim"],
-        bg=colors["bg_medium"],
-        height=8,
-        relief="flat",
-    )
-    graph_placeholder.pack(fill="both", expand=True, padx=10, pady=10)
-
     # Statistics section
     stats_frame = tk.LabelFrame(
         dashboard_frame,
@@ -837,9 +814,9 @@ def create_gui():
 
     # Get available network interfaces
     available_interfaces = get_if_list()
-    # Prefer wlan0 if available, otherwise use first available interface
-    if "wlan0" in available_interfaces:
-        default_interface = "wlan0"
+    # Prefer wlp8s0 if available, otherwise use first available interface
+    if "wlp8s0" in available_interfaces:
+        default_interface = "wlp8s0"
     elif available_interfaces:
         default_interface = available_interfaces[0]
     else:

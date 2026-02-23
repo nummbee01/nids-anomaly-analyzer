@@ -20,12 +20,12 @@ def select_interface():
         choice = int(input("Select an interface: "))
     except ValueError:
         print("Invalid input")
-        print(f"Auto-selecting {interfaces[2]} for testing")
-        return interfaces[2]
+        print(f"Auto-selecting {interfaces[0]} for testing")
+        return interfaces[0]
     if choice < 0 or choice >= len(interfaces):
         print("Invalid choice")
-        print(f"Auto-selecting {interfaces[2]} for testing")
-        return interfaces[2]
+        print(f"Auto-selecting {interfaces[0]} for testing")
+        return interfaces[0]
     return interfaces[choice]
 
 
