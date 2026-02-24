@@ -387,9 +387,7 @@ def detect_abnormal_traffic(state, src_ip):
 # │                  █▀█ █░▀█ █▀█ █▄▄ ░█░ █▄ █ █░▀█ █▄█ ░ █▀▀ █▀█ █▄▄ █░█ ██▄ ░█░                    │
 # │                                                                                                  │
 # ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
-def analyze_packet(
-    state, ethernet=None, ipv4=None, ipv6=None, tcp=None, udp=None, icmp=None
-):
+def analyze_packet(state, ethernet=None, ipv4=None, ipv6=None, tcp=None, udp=None, icmp=None):
     alerts = []
 
     src_ip = ipv4.src_ip if ipv4 else (ipv6.src_ip if ipv6 else None)
@@ -399,11 +397,6 @@ def analyze_packet(
 
     # Run detectors
     if src_mac and src_ip:
-        # COMMENTED OUT: MAC Spoofing detection disabled
-        # alert = detect_mac_spoofing(state, src_mac, src_ip)
-        # if alert:
-        #     alerts.append(alert)
-
         alert = detect_ip_spoofing(state, src_ip, src_mac)
         if alert:
             alerts.append(alert)
