@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
-"""
-Argus NIDS - Tkinter GUI
-"""
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                                  │
+# │        ▄▀█ █▀█ █▀▀ █░█ █▀ ░ █▄░█ █ █▀▄ █▀ ░ ─ ░ ▀█▀ █▄▀ █ █▄░█ ▀█▀ █▀▀ █▀█ ░ █▀▀ █░█ █           │
+# │        █▀█ █▀▄ █▄█ █▄█ ▄█ ░ █░▀█ █ █▄▀ ▄█ ░ ─ ░ ░█░ █░█ █ █░▀█ ░█░ ██▄ █▀▄ ░ █▄█ █▄█ █           │
+# │                                                                                                  │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                                  │
+# │                                   █ █▀▄▀█ █▀█ █▀█ █▀█ ▀█▀ █▀                                     │
+# │                                   █ █░▀░█ █▀▀ █▄█ █▀▄ ░█░ ▄█                                     │
+# │                                                                                                  │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 import json
 import sys
 import threading
@@ -15,15 +25,25 @@ from tkinter import filedialog, messagebox, scrolledtext, ttk
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from scapy.all import get_if_list
-
 from core.packet_capture import select_interface, start_capture
 from core.threat_detectors import create_state
 
-# UTILITY FUNCTIONS
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                                  │
+# │                  █░█ █▀▀ █░░ █▀█ █▀▀ █▀█ ░ █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█ █▀                    │
+# │                  █▀█ ██▄ █▄▄ █▀▀ ██▄ █▀▄ ░ █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█ ▄█                    │
+# │                                                                                                  │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 
 
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                                  │
+# │                         █▀ ▄▀█ █░█ █ █▄░█ █▀▀ ░ █▀▀ █▀█ █▄░█ █▀▀ █ █▀▀                           │
+# │                         ▄█ █▀█ ▀▄▀ █ █░▀█ █▄█ ░ █▄▄ █▄█ █░▀█ █▀░ █ █▄█                           │
+# │                                                                                                  │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 def save_config_to_json(entry_widgets):
-    """Save configuration values to JSON file"""
     config_data = {}
 
     for field_name, entry in entry_widgets.items():
@@ -50,8 +70,14 @@ def save_config_to_json(entry_widgets):
         messagebox.showerror("Error", f"Failed to save configuration:\n{str(e)}")
 
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                      █▀▀ ▀▄▀ █▀█ █▀█ █▀█ ▀█▀ █ █▄░█ █▀▀ ░ █░░ █▀█ █▀▀ █▀                         │
+# │                      ██▄ █░█ █▀▀ █▄█ █▀▄ ░█░ █ █░▀█ █▄█ ░ █▄▄ █▄█ █▄█ ▄█                         │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 def export_logs_to_json(logs_text, alerts_text):
-    """Export logs and alerts to JSON file"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     default_filename = f"argus_logs_{timestamp}.json"
 
@@ -86,11 +112,21 @@ def export_logs_to_json(logs_text, alerts_text):
         messagebox.showerror("Error", f"Failed to export logs:\n{str(e)}")
 
 
-# MAIN WINDOW SETUP
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                                  │
+# │                           █▀▀ █░█ █ ░ █▀▀ █▀█ █▀▀ ▄▀█ ▀█▀ █ █▀█ █▄░█                             │
+# │                           █▄█ █▄█ █ ░ █▄▄ █▀▄ ██▄ █▀█ ░█░ █ █▄█ █░▀█                             │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 
 
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                 █▀▀ █▀█ █▀▀ ▄▀█ ▀█▀ █ █▄░█ █▀▀ ░ █▀▄▀█ ▄▀█ █ █▄░█ ░ █▀▀ █░█ █                    │
+# │                 █▄▄ █▀▄ ██▄ █▀█ ░█░ █ █░▀█ █▄█ ░ █░▀░█ █▀█ █ █░▀█ ░ █▄█ █▄█ █                    │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 def create_gui():
-    """Create and configure the main GUI window"""
     root = tk.Tk()
     root.title("Argus NIDS - Network Intrusion Detection System")
     root.geometry("1400x900")
@@ -100,6 +136,13 @@ def create_gui():
     root.grid_rowconfigure(0, weight=1)
     root.grid_columnconfigure(1, weight=1)
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                       █▀▀ █▀█ █░░ █▀█ █▀█ ░ █▀█ ▄▀█ █░░ █▀▀ ▀█▀ ▀█▀ █▀▀                          │
+# │                       █▄▄ █▄█ █▄▄ █▄█ █▀▄ ░ █▀▀ █▀█ █▄▄ ██▄ ░█░ ░█░ ██▄                          │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Color scheme
     colors = {
         "bg_dark": "#1e1e1e",
@@ -115,105 +158,13 @@ def create_gui():
 
     root.configure(bg=colors["bg_dark"])
 
-    # SIDEBAR / MENU
 
-    sidebar = tk.Frame(root, bg=colors["bg_medium"], width=200)
-    sidebar.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
-    sidebar.grid_propagate(False)
-
-    # Argus Logo/Title
-    logo_frame = tk.Frame(sidebar, bg=colors["bg_medium"])
-    logo_frame.pack(fill="x", padx=20, pady=30)
-
-    logo_label = tk.Label(
-        logo_frame,
-        text="ARGUS",
-        font=("Arial", 28, "bold"),
-        fg=colors["accent"],
-        bg=colors["bg_medium"],
-    )
-    logo_label.pack()
-
-    subtitle_label = tk.Label(
-        logo_frame,
-        text="Network IDS",
-        font=("Arial", 10),
-        fg=colors["text_dim"],
-        bg=colors["bg_medium"],
-    )
-    subtitle_label.pack()
-
-    # Menu buttons
-    menu_buttons = []
-    current_view = {"view": "dashboard"}  # Track current view
-
-    def switch_view(view_name):
-        """Switch between dashboard and configuration views"""
-        current_view["view"] = view_name
-
-        # Update button styles
-        for btn, name in menu_buttons:
-            if name == view_name:
-                btn.configure(bg=colors["accent"], fg=colors["text"])
-            else:
-                btn.configure(bg=colors["bg_light"], fg=colors["text_dim"])
-
-        # Show/hide frames
-        if view_name == "dashboard":
-            dashboard_frame.pack(fill="both", expand=True)
-            config_frame.pack_forget()
-        elif view_name == "configuration":
-            dashboard_frame.pack_forget()
-            config_frame.pack(fill="both", expand=True)
-
-    # Dashboard button
-    dashboard_btn = tk.Button(
-        sidebar,
-        text="📊 Dashboard",
-        font=("Arial", 12),
-        bg=colors["accent"],
-        fg=colors["text"],
-        activebackground=colors["accent"],
-        activeforeground=colors["text"],
-        relief="flat",
-        cursor="hand2",
-        command=lambda: switch_view("dashboard"),
-    )
-    dashboard_btn.pack(fill="x", padx=10, pady=5)
-    menu_buttons.append((dashboard_btn, "dashboard"))
-
-    # Configuration button
-    config_btn = tk.Button(
-        sidebar,
-        text="⚙️ Configuration",
-        font=("Arial", 12),
-        bg=colors["bg_light"],
-        fg=colors["text_dim"],
-        activebackground=colors["accent"],
-        activeforeground=colors["text"],
-        relief="flat",
-        cursor="hand2",
-        command=lambda: switch_view("configuration"),
-    )
-    config_btn.pack(fill="x", padx=10, pady=5)
-    menu_buttons.append((config_btn, "configuration"))
-
-    # MAIN CONTENT AREA
-
-    content_area = tk.Frame(root, bg=colors["bg_dark"])
-    content_area.grid(row=0, column=1, sticky="nsew")
-    content_area.grid_rowconfigure(0, weight=1)
-    content_area.grid_columnconfigure(0, weight=1)
-
-    # DASHBOARD VIEW
-
-    dashboard_frame = tk.Frame(content_area, bg=colors["bg_dark"])
-    dashboard_frame.pack(fill="both", expand=True)
-
-    # Control buttons at top
-    control_frame = tk.Frame(dashboard_frame, bg=colors["bg_dark"])
-    control_frame.pack(fill="x", padx=20, pady=15)
-
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                   █▀ ▀█▀ ▄▀█ ▀█▀ █▀▀ ░ & ░ █░█ ▄▀█ █▀█ █ ▄▀█ █▄▄ █░░ █▀▀ █▀                      │
+# │                   ▄█ ░█░ █▀█ ░█░ ██▄ ░ & ░ ▀▄▀ █▀█ █▀▄ █ █▀█ █▄█ █▄▄ ██▄ ▄█                      │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Track running state and capture thread
     is_running = {"state": False}
     capture_thread = {"thread": None}
@@ -236,11 +187,30 @@ def create_gui():
         "unusual_protocols": 0,
     }
 
-    # Dictionary to store references to stat label widgets (populated later)
+    # Dictionary to store references to stat label widgets
     stat_labels = {}
+    
+    # Track current view
+    current_view = {"view": "dashboard"}
+    
+    # Store entry widgets for later access
+    entry_widgets = {}
 
+    # ╔──────────────────────────────────────────────────────────────────────────────────────────────╗
+    # │                                                                                              │
+    # │                     █ █▄░█ ▀█▀ █▀▀ █▀█ █▄░█ ▄▀█ █░░    █░░ █▀█ █▀▀ █ █▀▀                     │
+    # │                     █ █░▀█ ░█░ ██▄ █▀▄ █░▀█ █▀█ █▄▄    █▄▄ █▄█ █▄█ █ █▄▄                     │
+    # │                                                                                              │
+    # ╚──────────────────────────────────────────────────────────────────────────────────────────────╝
+
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │  █░█ █▀█ █▀▄ ▄▀█ ▀█▀ █ █▄░█ █▀▀ ░ █▀ ▀█▀ ▄▀█ ▀█▀ █ █▀ ▀█▀ █ █▀▀ █▀ ░ █▀▄ █ █▀ █▀█ █░░ ▄▀█ ▀▄▀    │
+# │  █▄█ █▀▀ █▄▀ █▀█ ░█░ █ █░▀█ █▄█ ░ ▄█ ░█░ █▀█ ░█░ █ ▄█ ░█░ █ █▄▄ ▄█ ░ █▄▀ █ ▄█ █▀▀ █▄▄ █▀█ ░█░    │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     def update_statistics_display():
-        """Update the statistics cards in the GUI"""
         # Update all stat labels with current values
         for stat_key, label_widget in stat_labels.items():
             value = stats.get(stat_key, 0)
@@ -262,10 +232,23 @@ def create_gui():
             else:
                 label_widget.config(fg=colors["success"])
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │             █▀▀ █░█ █ ░ █░█ █▀█ █▀▄ ▄▀█ ▀█▀ █▀▀ ░ █▀▀ ▄▀█ █░░ █░░ █▄▄ ▄▀█ █▀▀ █▄▀                │
+# │             █▄█ █▄█ █ ░ █▄█ █▀▀ █▄▀ █▀█ ░█░ ██▄ ░ █▄▄ █▀█ █▄▄ █▄▄ █▄█ █▀█ █▄▄ █░█                │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     def gui_callback(packet_info, alerts):
-        """Callback function to update GUI with packet information and alerts"""
 
         # This is called from packet capture thread, so schedule GUI updates in main thread
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                                  │
+# │                           █░█ █▀█ █▀▄ ▄▀█ ▀█▀ █ █▄░█ █▀▀ ░ █▀▀ █░█ █                             │
+# │                           █▄█ █▀▀ █▄▀ █▀█ ░█░ █ █░▀█ █▄█ ░ █▄█ █▄█ █                             │
+# │                                                                                                  │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
         def update_gui():
             stats["total_packets"] = packet_info["packet_num"]
 
@@ -338,8 +321,14 @@ def create_gui():
         # Schedule update in main GUI thread
         root.after(0, update_gui)
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                  █▀ ▀█▀ ▄▀█ █▀█ ▀█▀ █ █▄░█ █▀▀ ░ █▀▀ ▄▀█ █▀█ ▀█▀ █░█ █▀█ █▀▀                     │
+# │                  ▄█ ░█░ █▀█ █▀▄ ░█░ █ █░▀█ █▄█ ░ █▄▄ █▀█ █▀▀ ░█░ █▄█ █▀▄ ██▄                     │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     def start_packet_capture():
-        """Start packet capture using AsyncSniffer"""
         try:
             # Get interface from configuration
             interface = entry_widgets.get("INTERFACE", None)
@@ -371,8 +360,14 @@ def create_gui():
             )
             root.after(0, lambda: toggle_start_stop())  # Stop on error
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │   ▀█▀ █▀█ █▀▀ █▀▀ █░░ █ █▄░█ █▀▀ ░ █▀ ▀█▀ ▄▀█ █▀█ ▀█▀ / █▀ ▀█▀ █▀█ █▀█ ░ █▀ ▀█▀ ▄▀█ ▀█▀ █▀▀      │
+# │   ░█░ █▄█ █▄█ █▄█ █▄▄ █ █░▀█ █▄█ ░ ▄█ ░█░ █▀█ █▀▄ ░█░ / ▄█ ░█░ █▄█ █▀▀ ░ ▄█ ░█░ █▀█ ░█░ ██▄      │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     def toggle_start_stop():
-        """Toggle between Start and Stop states"""
         if is_running["state"]:
             # Currently running, so stop it
             is_running["state"] = False
@@ -403,8 +398,14 @@ def create_gui():
             )
             capture_thread["thread"].start()
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                        █▀▀ █░░ █▀▀ ▄▀█ █▀█ █ █▄░█ █▀▀ ░ █░░ █▀█ █▀▀ █▀                           │
+# │                        █▄▄ █▄▄ ██▄ █▀█ █▀▄ █ █░▀█ █▄█ ░ █▄▄ █▄█ █▄█ ▄█                           │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     def clear_logs():
-        """Clear all logs and alerts"""
         logs_text.configure(state="normal")
         logs_text.delete("1.0", "end")
         logs_text.configure(state="disabled")
@@ -419,6 +420,129 @@ def create_gui():
         update_statistics_display()
 
         messagebox.showinfo("Cleared", "All logs and alerts cleared")
+
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                     █▀ █░█░█ █ ▀█▀ █▀▀ █░█ █ █▄░█ █▀▀ ░ █░█ █ █▀▀ █░█░█ █▀                       │
+# │                     ▄█ ▀▄▀▄▀ █ ░█░ █▄▄ █▀█ █ █░▀█ █▄█ ░ ▀▄▀ █ ██▄ ▀▄▀▄▀ ▄█                       │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
+    def switch_view(view_name):
+        current_view["view"] = view_name
+
+        # Update button styles
+        for btn, name in menu_buttons:
+            if name == view_name:
+                btn.configure(bg=colors["accent"], fg=colors["text"])
+            else:
+                btn.configure(bg=colors["bg_light"], fg=colors["text_dim"])
+
+        # Show/hide frames
+        if view_name == "dashboard":
+            dashboard_frame.pack(fill="both", expand=True)
+            config_frame.pack_forget()
+        elif view_name == "configuration":
+            dashboard_frame.pack_forget()
+            config_frame.pack(fill="both", expand=True)
+
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                                    █▀ █ █▀▄ █▀▀ █▄▄ ▄▀█ █▀█                                      │
+# │                                    ▄█ █ █▄▀ ██▄ █▄█ █▀█ █▀▄                                      │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
+    sidebar = tk.Frame(root, bg=colors["bg_medium"], width=200)
+    sidebar.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
+    sidebar.grid_propagate(False)
+
+    # Argus Logo/Title
+    logo_frame = tk.Frame(sidebar, bg=colors["bg_medium"])
+    logo_frame.pack(fill="x", padx=20, pady=30)
+
+    logo_label = tk.Label(
+        logo_frame,
+        text="ARGUS",
+        font=("Arial", 28, "bold"),
+        fg=colors["accent"],
+        bg=colors["bg_medium"],
+    )
+    logo_label.pack()
+
+    subtitle_label = tk.Label(
+        logo_frame,
+        text="Network IDS",
+        font=("Arial", 10),
+        fg=colors["text_dim"],
+        bg=colors["bg_medium"],
+    )
+    subtitle_label.pack()
+
+    # Menu buttons
+    menu_buttons = []
+
+    # Dashboard button
+    dashboard_btn = tk.Button(
+        sidebar,
+        text="📊 Dashboard",
+        font=("Arial", 12),
+        bg=colors["accent"],
+        fg=colors["text"],
+        activebackground=colors["accent"],
+        activeforeground=colors["text"],
+        relief="flat",
+        cursor="hand2",
+        command=lambda: switch_view("dashboard"),
+    )
+    dashboard_btn.pack(fill="x", padx=10, pady=5)
+    menu_buttons.append((dashboard_btn, "dashboard"))
+
+    # Configuration button
+    config_btn = tk.Button(
+        sidebar,
+        text="⚙️ Configuration",
+        font=("Arial", 12),
+        bg=colors["bg_light"],
+        fg=colors["text_dim"],
+        activebackground=colors["accent"],
+        activeforeground=colors["text"],
+        relief="flat",
+        cursor="hand2",
+        command=lambda: switch_view("configuration"),
+    )
+    config_btn.pack(fill="x", padx=10, pady=5)
+    menu_buttons.append((config_btn, "configuration"))
+
+    ############################################################################
+    #                               CONTENT AREA                               #
+    ############################################################################
+
+    content_area = tk.Frame(root, bg=colors["bg_dark"])
+    content_area.grid(row=0, column=1, sticky="nsew")
+    content_area.grid_rowconfigure(0, weight=1)
+    content_area.grid_columnconfigure(0, weight=1)
+
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                               █▀▄ ▄▀█ █▀ █░█ █▄▄ █▀█ ▄▀█ █▀█ █▀▄                                 │
+# │                               █▄▀ █▀█ ▄█ █▀█ █▄█ █▄█ █▀█ █▀▄ █▄▀                                 │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
+    dashboard_frame = tk.Frame(content_area, bg=colors["bg_dark"])
+    dashboard_frame.pack(fill="both", expand=True)
+
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                      █▀ ▀█▀ ▄▀█ █▀█ ▀█▀ ░ █▀▀ ▄▀█ █▀█ ▀█▀ █░█ █▀█ █▀▀                       │
+# │                      ▄█ ░█░ █▀█ █▀▄ ░█░ ░ █▄▄ █▀█ █▀▀ ░█░ █▄█ █▀▄ ██▄                       │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
+    # Control buttons at top
+    control_frame = tk.Frame(dashboard_frame, bg=colors["bg_dark"])
+    control_frame.pack(fill="x", padx=20, pady=15)
 
     # Dynamic Start/Stop button
     start_stop_btn = tk.Button(
@@ -478,6 +602,13 @@ def create_gui():
     )
     status_label.pack(side="right", padx=10)
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                      █▀ ▀█▀ ▄▀█ █▀█ ▀█▀ ░ █▀▀ ▄▀█ █▀█ ▀█▀ █░█ █▀█ █▀▀                       │
+# │                      ▄█ ░█░ █▀█ █▀▄ ░█░ ░ █▄▄ █▀█ █▀▀ ░█░ █▄█ █▀▄ ██▄                       │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Filter section
     filter_frame = tk.Frame(dashboard_frame, bg=colors["bg_dark"])
     filter_frame.pack(fill="x", padx=20, pady=(0, 10))
@@ -532,6 +663,13 @@ def create_gui():
     )
     filter_apply_btn.pack(side="left", padx=(10, 0))
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                        █▀ ▀█▀ █▀█ █▀█ ░ █▀▀ ▄▀█ █▀█ ▀█▀ █░█ █▀█ █▀▀                         │
+# │                        ▄█ ░█░ █▄█ █▀▀ ░ █▄▄ █▀█ █▀▀ ░█░ █▄█ █▀▄ ██▄                         │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Two-column layout for logs and alerts
     columns_frame = tk.Frame(dashboard_frame, bg=colors["bg_dark"])
     columns_frame.pack(fill="both", expand=True, padx=20, pady=(0, 10))
@@ -539,6 +677,13 @@ def create_gui():
     columns_frame.grid_columnconfigure(1, weight=1)
     columns_frame.grid_rowconfigure(0, weight=1)
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                            █░░ █▀█ █▀▀ █▀ ░ █▀█ ▄▀█ █▄░█ █▀▀ █░░                            │
+# │                            █▄▄ █▄█ █▄█ ▄█ ░ █▀▀ █▀█ █░▀█ ██▄ █▄▄                            │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Left column - Packet Logs
     logs_frame = tk.LabelFrame(
         columns_frame,
@@ -562,6 +707,13 @@ def create_gui():
     logs_text.pack(fill="both", expand=True, padx=5, pady=5)
     logs_text.configure(state="disabled")
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                        ▄▀█ █░░ █▀▀ █▀█ ▀█▀ █▀ ░ █▀█ ▄▀█ █▄░█ █▀▀ █░░                        │
+# │                        █▀█ █▄▄ ██▄ █▀▄ ░█░ ▄█ ░ █▀▀ █▀█ █░▀█ ██▄ █▄▄                        │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Right column - Alerts
     alerts_frame = tk.LabelFrame(
         columns_frame,
@@ -585,8 +737,15 @@ def create_gui():
     alerts_text.pack(fill="both", expand=True, padx=5, pady=5)
     alerts_text.configure(state="disabled")
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                       █▀ ▀█▀ ▄▀█ ▀█▀ █ █▀ ▀█▀ █ █▀▀ █▀                       │
+# │                       ▄█ ░█░ █▀█ ░█░ █ ▄█ ░█░ █ █▄▄ ▄█                       │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Statistics section
-    stats_frame = tk.LabelFrame(
+    stats_section_frame = tk.LabelFrame(
         dashboard_frame,
         text="📊 Statistics",
         font=("Arial", 11, "bold"),
@@ -594,10 +753,10 @@ def create_gui():
         bg=colors["bg_dark"],
         relief="flat",
     )
-    stats_frame.pack(fill="x", padx=20, pady=(10, 10))
+    stats_section_frame.pack(fill="x", padx=20, pady=(10, 10))
 
     # Statistics grid
-    stats_grid = tk.Frame(stats_frame, bg=colors["bg_dark"])
+    stats_grid = tk.Frame(stats_section_frame, bg=colors["bg_dark"])
     stats_grid.pack(fill="x", padx=10, pady=10)
 
     # Configure grid columns
@@ -638,7 +797,7 @@ def create_gui():
         name_label.pack(pady=(0, 10))
 
     # Additional statistics row
-    stats_grid2 = tk.Frame(stats_frame, bg=colors["bg_dark"])
+    stats_grid2 = tk.Frame(stats_section_frame, bg=colors["bg_dark"])
     stats_grid2.pack(fill="x", padx=10, pady=(0, 10))
 
     for i in range(5):  # Changed from 6 to 5 (MAC Spoofing card removed)
@@ -676,11 +835,23 @@ def create_gui():
         )
         name_label.pack(pady=(0, 10))
 
-    # CONFIGURATION VIEW
 
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                       █▀▀ █▀█ █▄░█ █▀▀ █ █▀▀ █░█ █▀█ ▄▀█ ▀█▀ █ █▀█ █▄░█                          │
+# │                       █▄▄ █▄█ █░▀█ █▀░ █ █▄█ █▄█ █▀▄ █▀█ ░█░ █ █▄█ █░▀█                          │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     config_frame = tk.Frame(content_area, bg=colors["bg_dark"])
     # Don't pack yet - will be shown when button clicked
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │  █▀▀ █▀█ █▄░█ █▀▀ █ █▀▀ █░█ █▀█ ▄▀█ ▀█▀ █ █▀█ █▄░█ ░ ▀█▀ █ ▀█▀ █░░ █▀▀  │
+# │  █▄▄ █▄█ █░▀█ █▀░ █ █▄█ █▄█ █▀▄ █▀█ ░█░ █ █▄█ █░▀█ ░ ░█░ █ ░█░ █▄▄ ██▄  │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Configuration title
     config_title = tk.Label(
         config_frame,
@@ -691,6 +862,13 @@ def create_gui():
     )
     config_title.pack(pady=20)
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                 █▀▀ █▀█ █▄░█ █▀▀ █ █▀▀ ░ █▀ █▀▀ █▀█ █▀█ █░░ █░░ █▄▄ ▄▀█ █▀█                 │
+# │                 █▄▄ █▄█ █░▀█ █▀░ █ █▄█ ░ ▄█ █▄▄ █▀▄ █▄█ █▄▄ █▄▄ █▄█ █▀█ █▀▄                 │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Scrollable configuration area
     config_canvas = tk.Canvas(config_frame, bg=colors["bg_dark"], highlightthickness=0)
     config_scrollbar = ttk.Scrollbar(
@@ -810,8 +988,6 @@ def create_gui():
         ),
     ]
 
-    entry_widgets = {}  # Store entry widgets for later access
-
     # Get available network interfaces
     available_interfaces = get_if_list()
     # Prefer wlp8s0 if available, otherwise use first available interface
@@ -822,6 +998,13 @@ def create_gui():
     else:
         default_interface = "eth0"
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │     █▄░█ █▀▀ ▀█▀ █░█░█ █▀█ █▀█ █▄▀ ░ █ █▄░█ ▀█▀ █▀▀ █▀█ █▀▀ ▄▀█ █▀▀ █▀▀     │
+# │     █░▀█ ██▄ ░█░ ▀▄▀▄▀ █▄█ █▀▄ █░█ ░ █ █░▀█ ░█░ ██▄ █▀▄ █▀░ █▀█ █▄▄ ██▄     │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Create Network Interface section first (with dropdown)
     interface_section = tk.LabelFrame(
         config_scrollable,
@@ -871,6 +1054,13 @@ def create_gui():
     # Store in entry_widgets for compatibility with save function
     entry_widgets["INTERFACE"] = interface_combo
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │  █▀▀ █▀█ █▄░█ █▀▀ █ █▀▀ █░█ █▀█ ▄▀█ ▀█▀ █ █▀█ █▄░█ ░ █▀▀ █ █▀▀ █░░ █▀▄ █▀   │
+# │  █▄▄ █▄█ █░▀█ █▀░ █ █▄█ █▄█ █▀▄ █▀█ ░█░ █ █▄█ █░▀█ ░ █▀░ █ ██▄ █▄▄ █▄▀ ▄█   │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Create other configuration sections
     for section_name, fields in config_fields:
         # Section frame
@@ -925,6 +1115,13 @@ def create_gui():
 
             entry_widgets[field_name] = entry
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                  █▀ ▄▀█ █░█ █▀▀ ░ █▄▄ █░█ ▀█▀ ▀█▀ █▀█ █▄░█                  │
+# │                  ▄█ █▀█ ▀▄▀ ██▄ ░ █▄█ █▄█ ░█░ ░█░ █▄█ █░▀█                  │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     # Save button at bottom of config
     save_btn_frame = tk.Frame(config_scrollable, bg=colors["bg_dark"])
     save_btn_frame.pack(fill="x", padx=20, pady=20)
@@ -944,8 +1141,13 @@ def create_gui():
     )
     save_config_btn.pack()
 
-    # Footer
 
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                           █▀▀ █▄█ █▄█ ▀█▀ ██▄ █▀█                            │
+# │                           █▀░ █▄█ █▄█ ░█░ ██▄ █▀▄                            │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
     footer = tk.Frame(root, bg=colors["bg_medium"], height=40)
     footer.grid(row=1, column=0, columnspan=2, sticky="ew")
     footer.grid_propagate(False)
@@ -961,9 +1163,21 @@ def create_gui():
 
     return root
 
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                               █▀▄▀█ ▄▀█ █ █▄░█                               │
+# │                               █░▀░█ █▀█ █ █░▀█                               │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────╝
 
+
+# ╔──────────────────────────────────────────────────────────────────────────────────────────────────╗
+# │                                                                                              │
+# │                            █▀▄▀█ ▄▀█ █ █▄░█ ░ █▀▀ █▄░█ ▀█▀ █▀█ ▀▄▀                               │
+# │                            █░▀░█ █▀█ █ █░▀█ ░ ██▄ █░▀█ ░█░ █▀▄ ░█░                               │
+# │                                                                                              │
+# ╚──────────────────────────────────────────────────────────────────────────────────────────────────╝
 def main():
-    """Main entry point for the GUI"""
     root = create_gui()
     root.mainloop()
 
